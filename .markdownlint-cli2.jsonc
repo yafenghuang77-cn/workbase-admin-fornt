@@ -1,0 +1,13 @@
+{
+  "ignores": [
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/dist-ssr/**",
+    "**/coverage/**",
+    "**/.cache/**",
+    ".husky/_/**",
+    "playwright-report/**",
+    "test-results/**",
+    "src/generated/**",
+  ],
+}
