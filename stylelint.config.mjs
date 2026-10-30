@@ -5,6 +5,8 @@ export default {
     '**/node_modules/**',
     '**/dist/**',
     '**/dist-ssr/**',
+    // Matches Vite build.outDir.
+    'workbase/**',
     '**/coverage/**',
     '**/.cache/**',
     'playwright-report/**',

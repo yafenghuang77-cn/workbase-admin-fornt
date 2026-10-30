@@ -1,0 +1,29 @@
+.page-content {
+  min-height: calc(100vh - 184px);
+}
+
+.workbase-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: inherit;
+  font-size: 18px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.skip-navigation {
+  position: fixed;
+  top: -100px;
+  left: 16px;
+  z-index: 2000;
+  padding: 12px 20px;
+  color: #fff;
+  background: #1677ff;
+  border-radius: 6px;
+}
+
+.skip-navigation:focus {
+  top: 8px;
+  color: #fff;
+}

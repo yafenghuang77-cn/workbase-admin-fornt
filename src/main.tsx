@@ -1,10 +1,14 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import { RouterProvider } from '@tanstack/react-router';
 
-import { queryClient } from './query-client';
+import { AppProviders } from './providers/AppProviders';
+import { router } from './router';
+
+import 'antd/dist/reset.css';
+import './styles/global.css';
 
 const root = document.getElementById('root');
 
@@ -14,9 +18,9 @@ if (!root) {
 
 createRoot(root).render(
   <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <div>这个是一个vite8+react19+ts7的前端工程</div>
+    <AppProviders>
+      <RouterProvider router={router} />
       {import.meta.env.DEV ? <ReactQueryDevtools initialIsOpen={false} /> : null}
-    </QueryClientProvider>
+    </AppProviders>
   </StrictMode>,
 );

@@ -1,6 +1,8 @@
 node_modules/
 dist/
 dist-ssr/
+# Vite build.outDir
+workbase/
 coverage/
 .cache/
 .husky/_/

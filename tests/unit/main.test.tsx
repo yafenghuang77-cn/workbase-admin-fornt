@@ -26,13 +26,15 @@ afterEach(() => {
 });
 
 test('入口在根节点中渲染当前页面', async () => {
+  window.history.replaceState(null, '', import.meta.env.BASE_URL);
   render(<div id="root" />);
 
   await act(async () => {
     await import('@/main');
   });
 
-  expect(screen.getByText('这个是一个vite8+react19+ts7的前端工程')).toBeVisible();
+  expect(await screen.findByRole('heading', { name: '欢迎使用 Workbase' })).toBeVisible();
+  expect(window.location.pathname).toBe(`${import.meta.env.BASE_URL}welcome`);
 });
 
 test('缺少根节点时报告明确的启动错误', async () => {

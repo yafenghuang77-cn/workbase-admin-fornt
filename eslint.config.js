@@ -28,6 +28,8 @@ export default defineConfig([
     '**/node_modules/**',
     '**/dist/**',
     '**/dist-ssr/**',
+    // Vite build.outDir; generated bundles are not source files.
+    'workbase/**',
     '**/coverage/**',
     '**/.cache/**',
     '.husky/_/**',

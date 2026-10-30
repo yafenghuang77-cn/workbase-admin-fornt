@@ -14,7 +14,7 @@
 
 - 构建页面优先使用 `@ant-design/pro-components` 和 `antd`：布局优先 ProLayout / PageContainer，列表优先 ProTable，编辑表格优先 EditableProTable，表单优先 ProForm / ModalForm / DrawerForm / StepsForm，详情优先 ProDescriptions；简单场景使用 antd 对应基础组件。
 - 先用 `rg` 检索项目已有实现，再查已安装组件、Hook 和工具的能力。能通过公开 API 和组合完成的功能，不重复实现搜索表格、分页、表单校验、弹窗、上传或通用布局。
-- 当前只有入口和 QueryClient 基础设施；路由、antd 应用级上下文、请求封装和业务页面尚未实现。按任务逐步接入，不把预装依赖或 Vite 预打包项当作已完成能力。
+- 当前已有 QueryClient、TanStack Router 配置式代码路由、antd 应用级上下文和 ProLayout 首页框架；在 `src/router/routes.tsx` 配置 `component` 等字段，由 `registerRoutes` 自动注册，`layout: false` 为全屏页面，菜单由配置派生。业务菜单页仅保留空目录。请求封装与业务功能按任务逐步接入，不把预装依赖或 Vite 预打包项当作已完成能力。
 - ProForm / antd Form 与 React Hook Form 不共同管理同一表单；ProTable 自动请求与 `useQuery` 不同时请求同一数据。服务端状态由 Query 统一管理，默认通过受控数据接入表格，提交使用 Mutation 并精准失效缓存。
 - 按 CONTRIBUTING 的场景表复用已有库：HTTP 用 Axios，路由用 TanStack Router，图表优先 ECharts，通用 Hook 优先 ahooks，工具优先原生 API / es-toolkit，日期用 Day.js，文档处理按格式选已有库。
 - 对重叠库按场景选一个：虚拟列表先用组件现有能力，再评估 TanStack Virtual；Radash、其他 Hook 库、React Hook Form 等仅在已有首选能力不适合时使用。不要因已安装就全部接入。

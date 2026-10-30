@@ -1,6 +1,6 @@
 import { ESLint } from 'eslint';
 import stylelint from 'stylelint';
-import { expect, test } from 'vitest';
+import { beforeAll, describe, expect, test } from 'vitest';
 
 const cases = [
   {
@@ -94,24 +94,32 @@ const typedCases = [
   ],
 ];
 
-for (const [rule, code] of typedCases) {
-  test(`typed safety rejects ${rule}: ${code}`, async () => {
-    const eslint = new ESLint();
-    // An existing TS project path lets projectService type-check the in-memory
-    // source; this does not write to main.tsx or add fixtures to the app.
-    const [result] = await eslint.lintText(code, { filePath: 'src/main.tsx' });
-    expect(result.messages).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ ruleId: `@typescript-eslint/${rule}`, severity: 2 }),
-      ]),
-    );
-  });
-}
-
-test('unknown boundaries, type narrowing and Error rethrows remain valid', async () => {
+describe('type-aware ESLint rules', () => {
   const eslint = new ESLint();
-  const [result] = await eslint.lintText(
-    `export function read(text: string): string {
+
+  // Loading the application and dependency types took over 5 seconds during
+  // parallel test runs. Give only this cold-start setup its own time budget;
+  // individual rule regressions retain the default 5-second timeout.
+  beforeAll(async () => {
+    await eslint.lintText('export {};', { filePath: 'src/main.tsx' });
+  }, 15_000);
+
+  for (const [rule, code] of typedCases) {
+    test(`typed safety rejects ${rule}: ${code}`, async () => {
+      // An existing TS project path lets projectService type-check the in-memory
+      // source; this does not write to main.tsx or add fixtures to the app.
+      const [result] = await eslint.lintText(code, { filePath: 'src/main.tsx' });
+      expect(result.messages).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ ruleId: `@typescript-eslint/${rule}`, severity: 2 }),
+        ]),
+      );
+    });
+  }
+
+  test('unknown boundaries, type narrowing and Error rethrows remain valid', async () => {
+    const [result] = await eslint.lintText(
+      `export function read(text: string): string {
       const value: unknown = JSON.parse(text);
       if (typeof value !== 'string') {
         throw new Error('Expected a string');
@@ -121,22 +129,34 @@ test('unknown boundaries, type narrowing and Error rethrows remain valid', async
     export function rethrow(text: string): unknown {
       try { return read(text); } catch (error) { console.error(error); throw error; }
     }`,
-    { filePath: 'src/main.tsx' },
-  );
-  expect(result.messages).toEqual([]);
-});
+      { filePath: 'src/main.tsx' },
+    );
+    expect(result.messages).toEqual([]);
+  });
 
-test('TanStack Router redirect and notFound remain valid control flow', async () => {
-  const eslint = new ESLint();
-  const [result] = await eslint.lintText(
-    `import { notFound, redirect } from '@tanstack/react-router';
+  test('TanStack Router redirect and notFound remain valid control flow', async () => {
+    const [result] = await eslint.lintText(
+      `import { notFound, redirect } from '@tanstack/react-router';
 
     export function redirectToLogin() { throw redirect({ to: '/' }); }
     export function missingPage() { throw notFound(); }
     `,
-    { filePath: 'src/main.tsx' },
-  );
-  expect(result.messages).toEqual([]);
+      { filePath: 'src/main.tsx' },
+    );
+    expect(result.messages).toEqual([]);
+  });
+
+  test('safe React, optional chaining and object spread remain valid', async () => {
+    const [result] = await eslint.lintText(
+      `export default function Preview({ item }: { item?: { price: number } }) {
+      const price = (item?.price ?? 0) * 2;
+      const details = { ...item, price };
+      return <iframe title={JSON.stringify(details)} sandbox="" src="/preview" />;
+    }`,
+      { filePath: 'src/main.tsx' },
+    );
+    expect(result.messages).toEqual([]);
+  });
 });
 
 const languageCases = [
@@ -173,16 +193,33 @@ for (const [rule, code] of languageCases) {
   });
 }
 
-test('safe React, optional chaining and object spread remain valid', async () => {
-  const [result] = await new ESLint().lintText(
-    `export default function Preview({ item }: { item?: { price: number } }) {
-      const price = (item?.price ?? 0) * 2;
-      const details = { ...item, price };
-      return <iframe title={JSON.stringify(details)} sandbox="" src="/preview" />;
-    }`,
-    { filePath: 'src/main.tsx' },
+test('ESLint ignores build output while still checking source JavaScript', async () => {
+  const eslint = new ESLint();
+  const code = 'var value = 1; console.error(value);';
+  const outputResults = await eslint.lintText(code, {
+    filePath: 'workbase/assets/app.js',
+    warnIgnored: false,
+  });
+  const [sourceResult] = await eslint.lintText(code, { filePath: 'src/fixture.jsx' });
+
+  expect(outputResults).toEqual([]);
+  expect(sourceResult.messages).toEqual(
+    expect.arrayContaining([expect.objectContaining({ ruleId: 'no-var', severity: 2 })]),
   );
-  expect(result.messages).toEqual([]);
+});
+
+test('Stylelint ignores build output while still rejecting ID selectors in source CSS', async () => {
+  const code = '#probe { color: red; }';
+  const outputResult = await stylelint.lint({ code, codeFilename: 'workbase/assets/app.css' });
+  const sourceResult = await stylelint.lint({ code, codeFilename: 'src/fixture.css' });
+
+  expect(outputResult.results[0].ignored).toBe(true);
+  expect(outputResult.results[0].warnings).toEqual([]);
+  expect(sourceResult.results[0].warnings).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({ rule: 'selector-max-id', severity: 'error' }),
+    ]),
+  );
 });
 
 const styleCases = [
