@@ -11,43 +11,24 @@
 本次核对的核心安装版本为 React 19.3.1、Vite 8.3.5、antd 6.6.8、`@ant-design/pro-components` 3.1.15-8、TanStack Query 5.105.0 和 TanStack Router 1.170.46。这里记录的是扫描快照；后续开发使用 `pnpm list --depth 0` 重新确认，尤其不要将 ProComponents 2.x 示例直接套到当前 3.x 预发布版本。
 
 - 已接入：React Compiler、共享 QueryClient、开发模式 Query Devtools、antd 应用级主题与反馈上下文，以及代码、样式、文档、类型和 Vitest 检查。
-- 路由使用 TanStack Router 代码路由，入口位于 `src/router/index.ts`；在 `src/router/routes.tsx` 配置页面，由 `registerRoutes` 自动注册。独立首页位于 `src/pages/welcome`，部署地址是 `/workbase/`，旧地址 `/workbase/welcome` 会跳转到首页。
+- 路由使用 TanStack Router 文件路由，定义位于 `src/routes`，路由实例位于 `src/router/index.ts`。独立首页位于 `src/pages/welcome`，部署地址是 `/workbase/`，旧地址 `/workbase/welcome` 会跳转到首页。
 - 尚未接入：业务页面、统一 Axios 请求封装、登录权限和监控初始化。
-- 代码路由无需启用 Vite 中注释的 Router 文件路由插件；Tailwind、Orval、MSW、Playwright 等已预装，但尚无对应业务接入或完整工作流。依赖预打包配置不代表功能已经实现。
+- Tailwind、Orval、MSW、Playwright 等已预装，但尚无对应业务接入或完整工作流。依赖预打包配置不代表功能已经实现。
 - 当前 Vite 配置为基础路径 `/workbase/`、开发端口 `8888`、API 代理目标 `http://127.0.0.1:9999`、构建目录 `workbase`。这些值以 `vite.config.ts` 为准。
 
-源码按职责组织：`src/router` 维护路由，`src/pages` 放页面，`src/providers` 提供应用上下文，`src/styles` 放全局样式。页面专用组件、Hook 和样式优先放在对应页面目录附近，实际形成跨页面业务复用后再提取。
+源码按职责组织：`src/routes` 定义文件路由，`src/router` 维护路由实例与错误反馈，`src/pages` 放页面，`src/providers` 提供应用上下文，`src/styles` 放全局样式。页面专用组件、Hook 和样式优先放在对应页面目录附近，实际形成跨页面业务复用后再提取。
 
 开发前先搜索所属功能、共享代码和已安装依赖。复用顺序为：已有业务能力 → 适合该场景的 ProComponents / antd 或现有专用库 → 少量业务组合代码 → 有明确缺口时才新增依赖或自研。不要为了复用而引入通用 CRUD 引擎，也不要因依赖已安装就全部接入。
 
-## 配置式路由
+## 文件路由
 
-新增页面只维护 `src/router/routes.tsx`，页面组件放在 `src/pages` 对应目录。`src/router/index.ts` 通过 `rootRoute.addChildren(registerRoutes(rootRoute, routeConfig))` 统一注册，不需要手动增加 `createRoute` 或修改组件判断分支。
+新增页面时，在 `src/routes` 按 TanStack Router 文件命名规则添加路由，使用 `createFileRoute` 导出 `Route`。页面组件放在 `src/pages` 对应目录。路由路径使用应用内路径，部署前缀由 `createRouter` 的 `basepath` 统一处理。[TanStack Router 文件路由](https://tanstack.com/router/latest/docs/routing/file-based-routing)
 
-| 字段         | 约定                                                                                          |
-| ------------ | --------------------------------------------------------------------------------------------- |
-| `path`       | 必填，应用内绝对路径，不带 `/workbase` 前缀；动态参数使用 TanStack Router 的 `$id` 语法       |
-| `name`       | 页面标题与面包屑名称；省略时不生成当前层菜单                                                  |
-| `icon`       | 可选，直接传入图标节点，如 `<SmileOutlined aria-hidden />`，不维护枚举或映射表                |
-| `component`  | 页面组件引用，可用 `lazyRouteComponent` 懒加载                                                |
-| `layout`     | 布局元数据，默认 `true`；`false` 表示独立页面，子项继承父值并可覆盖。当前路由直接渲染页面组件 |
-| `redirect`   | 显式指定此路径的跳转目标；不根据第一个子菜单推断，不拦截子页面                                |
-| `hideInMenu` | 隐藏该菜单及其子菜单，页面仍注册并可直接访问；不代表访问权限                                  |
-| `children`   | 页面与菜单分组，子项仍使用完整绝对路径；父页面组件不会包裹子页面，无需为分组页面编写 `Outlet` |
+- `__root.ts` 配置 404 和路由错误反馈。
+- `index.ts` 将 `/` 绑定到首页。
+- `welcome.ts` 使用 `beforeLoad` 和 `redirect` 处理旧地址。
 
-例如，下面配置会注册一个不带后台布局的页面（组件复用欢迎页，仅展示配置方式）：
-
-```ts
-{
-  path: '/fullscreen',
-  name: '独立页面',
-  component: lazyRouteComponent(() => import('@/pages/welcome')),
-  layout: false,
-  hideInMenu: true,
-}
-```
-
-`children` 在本项目配置中表达分组，子页面独立注册。 `registerRoutes` 将布局与面包屑元数据保存在匹配路由的 `staticData.page`，供页面按需使用。菜单显隐不影响页面匹配。未配置 `redirect` 的分组不会自动跳转。
+Vite 插件在开发和构建时生成 `src/routeTree.gen.ts`。提交路由变更时一并提交该文件，以便新检出的工作区直接运行 `pnpm check` 和 `pnpm typecheck`。该文件由插件维护，已从 ESLint 和 Prettier 排除。
 
 ## 页面与组件优先级
 
@@ -212,6 +193,8 @@ chore: 配置前端代码规范
 本地 hooks 与 CI 使用同一套规范。hooks 可被绕过，CI 会重新执行全量检查。
 
 ## 样式规范
+
+项目自写样式统一放在 `.less` 文件。全局入口是 `src/styles/global.less`，页面样式与组件同目录。主题相关样式可在 antd `App` 内使用现有的 `--ant-*` CSS 变量。
 
 `stylelint.config.mjs` 继承 `stylelint-config-ali`，使用其 CSS、Less 和 SCSS 支持；不与 standard 预设重复叠加。检查无效颜色、未知属性、重复声明、重复选择器、未知单位和 ID 选择器等问题。项目将错误级别设为 error，并额外拒绝空样式块和未知 CSS at-rule。
 

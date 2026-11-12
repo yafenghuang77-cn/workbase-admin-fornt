@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { expect, test } from 'vitest';
 
 import { AppProviders } from '@/providers/AppProviders';
-import { routeTree } from '@/router';
+import { routeTree } from '@/routeTree.gen';
 
 function renderAt(path: string) {
   const history = createMemoryHistory({ initialEntries: [path] });

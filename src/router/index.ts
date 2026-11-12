@@ -1,15 +1,6 @@
-import { createRootRoute, createRouter } from '@tanstack/react-router';
+import { createRouter } from '@tanstack/react-router';
 
-import { registerRoutes } from './register-routes';
-import { NotFoundPage, RouteErrorPage } from './RouteFeedback';
-import { routeConfig } from './routes';
-
-const rootRoute = createRootRoute({
-  notFoundComponent: NotFoundPage,
-  errorComponent: RouteErrorPage,
-});
-
-export const routeTree = rootRoute.addChildren(registerRoutes(rootRoute, routeConfig));
+import { routeTree } from '@/routeTree.gen';
 
 export const router = createRouter({
   routeTree,

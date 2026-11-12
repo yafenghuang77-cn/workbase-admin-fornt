@@ -1,5 +1,5 @@
 import babel from '@rolldown/plugin-babel';
-// import { tanstackRouter } from '@tanstack/router-plugin/vite';
+import { tanstackRouter } from '@tanstack/router-plugin/vite';
 import react, { reactCompilerPreset } from '@vitejs/plugin-react';
 import { createLogger } from 'vite';
 import { compression } from 'vite-plugin-compression2';
@@ -33,10 +33,7 @@ export default defineConfig(({ command, mode, isPreview }) => {
         threshold: 10240, // 仅对超过 10KB 的文件进行压缩
         deleteOriginalAssets: false, // 保留原始文件，以兼容不支持 Gzip 的环境
       }),
-      // tanstackRouter({
-      //   target: 'react',
-      //   autoCodeSplitting: true,
-      // }),
+      tanstackRouter({ target: 'react', semicolons: true }),
       react(),
       babel({ presets: [reactCompilerPreset()] }),
     ],

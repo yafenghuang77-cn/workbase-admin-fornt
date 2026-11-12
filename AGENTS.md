@@ -14,7 +14,7 @@
 
 - 构建页面优先使用 `@ant-design/pro-components` 和 `antd`：布局优先 ProLayout / PageContainer，列表优先 ProTable，编辑表格优先 EditableProTable，表单优先 ProForm / ModalForm / DrawerForm / StepsForm，详情优先 ProDescriptions；简单场景使用 antd 对应基础组件。
 - 先用 `rg` 检索项目已有实现，再查已安装组件、Hook 和工具的能力。能通过公开 API 和组合完成的功能，不重复实现搜索表格、分页、表单校验、弹窗、上传或通用布局。
-- 当前已有 QueryClient、TanStack Router 配置式代码路由、antd 应用级上下文和独立首页。访问 `/workbase/` 打开首页，旧欢迎页地址重定向至首页。在 `src/router/routes.tsx` 配置 `component` 等字段，由 `registerRoutes` 自动注册。请求封装与业务功能按任务逐步接入，不把预装依赖或 Vite 预打包项当作已完成能力。
+- 当前已有 QueryClient、TanStack Router 文件路由、antd 应用级上下文和独立首页。访问 `/workbase/` 打开首页，旧欢迎页地址重定向至首页。在 `src/routes` 定义路由，Vite 插件生成 `src/routeTree.gen.ts`。路由变更需同时纳入生成文件，便于独立类型检查。请求封装与业务功能按任务逐步接入，不把预装依赖或 Vite 预打包项当作已完成能力。
 - ProForm / antd Form 与 React Hook Form 不共同管理同一表单；ProTable 自动请求与 `useQuery` 不同时请求同一数据。服务端状态由 Query 统一管理，默认通过受控数据接入表格，提交使用 Mutation 并精准失效缓存。
 - 按 CONTRIBUTING 的场景表复用已有库：HTTP 用 Axios，路由用 TanStack Router，图表优先 ECharts，通用 Hook 优先 ahooks，工具优先原生 API / es-toolkit，日期用 Day.js，文档处理按格式选已有库。
 - 对重叠库按场景选一个：虚拟列表先用组件现有能力，再评估 TanStack Virtual；Radash、其他 Hook 库、React Hook Form 等仅在已有首选能力不适合时使用。不要因已安装就全部接入。
@@ -53,7 +53,7 @@
 
 ## 样式与文档
 
-- CSS/Less/SCSS 使用 Stylelint 配置；样式使用类选择器，ID 保留给锚点或 DOM 标识。
+- 项目自写样式统一使用 Less 并通过 Stylelint 检查。样式使用类选择器，ID 保留给锚点或 DOM 标识。
 - Markdown 使用仓库配置，代码块标明语言；禁止在文档或客户端代码中写入密钥。
 - 格式统一交给 Prettier，不叠加有冲突的格式化工具。
 - 新增忽略项或禁用规则需要具体理由与最小范围，不能为让检查通过而全局关闭规则。

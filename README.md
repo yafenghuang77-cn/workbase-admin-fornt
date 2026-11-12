@@ -6,7 +6,7 @@
 
 目前处于业务开发前的基础设施阶段。启动后访问 `/workbase/` 即可打开独立首页，旧地址 `/workbase/welcome` 会跳转到首页。开发模式提供 React Query Devtools。
 
-- 已接入：React Compiler、TanStack Router 代码路由、antd 应用级主题与反馈上下文、共享 QueryClient、Vite 开发与构建配置，以及代码检查、Vitest 测试和 GitHub Actions。
+- 已接入：React Compiler、TanStack Router 文件路由、antd 应用级主题与反馈上下文、共享 QueryClient、Vite 开发与构建配置，以及代码检查、Vitest 测试和 GitHub Actions。
 - 尚未实现：业务页面、登录权限、统一请求封装和监控初始化。
 - 已预装但按需接入：ProComponents、Zustand、图表、编辑器和文档处理库等。Tailwind、Orval、MSW 和 Playwright 尚未形成对应业务工作流。
 
@@ -104,7 +104,7 @@ pnpm preview
 - 使用 React 插件和 Babel React Compiler 预设，`@/` 解析到 `src/`，React 与 React DOM 配置去重。
 - 开发预打包显式包含 React 相关入口、TanStack Router / Query、Ant Design 图标、ProComponents、antd、`react-intl` 和 Zustand；其他依赖按引用发现。预打包清单不是生产功能清单。
 - 开发服务器预热 `src/main.tsx`，额外忽略覆盖率与 Playwright 报告目录的文件监听。
-- CSS 开启开发 sourcemap；CSS Modules 开发类名保留文件和局部名称，生产类名使用 hash。已安装 Less，Tailwind 的 Vite 插件尚未启用。
+- 项目样式使用 Less，开发环境开启样式 sourcemap。CSS Modules 开发类名保留文件和局部名称，生产类名使用 hash。
 - 生产目标为 `baseline-widely-available`，JavaScript 使用 Oxc 压缩，CSS 使用 Lightning CSS 压缩，关闭生产 sourcemap，保留 CSS 分包并生成 manifest。
 - 输出目录为 `workbase/`，JavaScript 位于 `assets/js`，其他打包资源按扩展名放入 `assets/[ext]`，文件名带 hash；`public/` 资源原样复制。
 - Gzip 插件对超过 10 KB 的资源生成压缩文件，并保留原文件。部署端需配置压缩资源的正确响应方式，生成 `.gz` 不等于服务端自动启用 Gzip。

@@ -7,8 +7,7 @@ import { RouterProvider } from '@tanstack/react-router';
 import { AppProviders } from './providers/AppProviders';
 import { router } from './router';
 
-import 'antd/dist/reset.css';
-import './styles/global.css';
+import './styles/global.less';
 
 const root = document.getElementById('root');
 

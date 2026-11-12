@@ -1,19 +1,23 @@
 .welcome-page {
   display: grid;
-  gap: var(--welcome-gap);
+  gap: var(--ant-margin-lg);
   max-width: 1280px;
   margin-inline: auto;
   padding: clamp(16px, 4vw, 48px);
-  color: var(--welcome-text);
+  color: var(--ant-color-text);
 }
 
 .welcome-intro {
   padding: 12px 0 4px;
+
+  @media (max-width: 575px) {
+    padding-top: 0;
+  }
 }
 
 .welcome-eyebrow {
   margin: 0 0 12px;
-  color: var(--welcome-primary);
+  color: var(--ant-color-primary);
   font-size: 12px;
   font-weight: 600;
   letter-spacing: 1px;
@@ -28,7 +32,7 @@
 
 .welcome-description {
   margin: 0;
-  color: var(--welcome-secondary);
+  color: var(--ant-color-text-secondary);
   line-height: 1.8;
 }
 
@@ -36,17 +40,21 @@
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
+
+  @media (max-width: 1100px) {
+    grid-template-columns: 1fr;
+  }
 }
 
 .welcome-resource-link {
   display: block;
-  border-radius: var(--welcome-radius);
+  border-radius: var(--ant-border-radius-lg);
   color: inherit;
-}
 
-.welcome-resource-link:focus-visible {
-  outline: 2px solid var(--welcome-primary);
-  outline-offset: 4px;
+  &:focus-visible {
+    outline: 2px solid var(--ant-color-primary);
+    outline-offset: 4px;
+  }
 }
 
 .welcome-resource {
@@ -65,9 +73,9 @@
   align-items: center;
   justify-content: center;
   height: 40px;
-  border-radius: var(--welcome-radius);
-  background: var(--welcome-primary-bg);
-  color: var(--welcome-primary);
+  border-radius: var(--ant-border-radius-lg);
+  background: var(--ant-color-primary-bg);
+  color: var(--ant-color-primary);
   font-size: 16px;
   font-weight: 600;
 }
@@ -84,7 +92,7 @@
 
 .welcome-resource-description {
   margin: 0;
-  color: var(--welcome-secondary);
+  color: var(--ant-color-text-secondary);
   font-size: 13px;
   line-height: 1.8;
 }
@@ -92,18 +100,6 @@
 .welcome-resource-arrow {
   flex-shrink: 0;
   margin-top: 4px;
-  color: var(--welcome-secondary);
+  color: var(--ant-color-text-secondary);
   transform: rotate(45deg);
-}
-
-@media (max-width: 1100px) {
-  .welcome-resources {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 575px) {
-  .welcome-intro {
-    padding-top: 0;
-  }
 }

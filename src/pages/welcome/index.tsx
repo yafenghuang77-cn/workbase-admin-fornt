@@ -1,9 +1,7 @@
-import type { CSSProperties } from 'react';
-
 import { ArrowUpOutlined } from '@ant-design/icons';
-import { Card, theme } from 'antd';
+import { Card } from 'antd';
 
-import './index.css';
+import './index.less';
 
 const resources = [
   {
@@ -26,21 +24,9 @@ const resources = [
   },
 ];
 
-type WelcomeStyles = CSSProperties & Record<`--welcome-${string}`, string>;
-
 export default function WelcomePage() {
-  const { token } = theme.useToken();
-  const styles: WelcomeStyles = {
-    '--welcome-primary': token.colorPrimary,
-    '--welcome-primary-bg': token.colorPrimaryBg,
-    '--welcome-text': token.colorText,
-    '--welcome-secondary': token.colorTextSecondary,
-    '--welcome-radius': `${token.borderRadiusLG}px`,
-    '--welcome-gap': `${token.marginLG}px`,
-  };
-
   return (
-    <main className="welcome-page" style={styles}>
+    <main className="welcome-page">
       <div className="welcome-intro">
         <p className="welcome-eyebrow">WORKBASE · 企业级工作台</p>
         <h1 className="welcome-heading">欢迎使用 Workbase</h1>

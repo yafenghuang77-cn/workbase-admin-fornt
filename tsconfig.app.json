@@ -32,5 +32,5 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src", "src/**/*.css", "src/**/*.scss"]
+  "include": ["src"]
 }
