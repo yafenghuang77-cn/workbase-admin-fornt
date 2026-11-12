@@ -353,6 +353,9 @@ importers:
       '@types/babel__core':
         specifier: ^7.20.5
         version: 7.20.5
+      '@types/eslint-plugin-jsx-a11y':
+        specifier: ^6.10.1
+        version: 6.10.1(jiti@2.7.0)(supports-color@10.2.2)
       '@types/node':
         specifier: ^26.6.5
         version: 26.6.5
@@ -2930,6 +2933,9 @@ packages:
 
   '@types/deep-eql@4.0.2':
     resolution: {integrity: sha512-c9h9dVVMigMPc4bwTvC5dxqtqJZwQPePsWjPlpSOnojbor6pGqdk541lfA7AqFQr5pB1BRdq0juY9db81BwyFw==}
+
+  '@types/eslint-plugin-jsx-a11y@6.10.1':
+    resolution: {integrity: sha512-5RtuPVe0xz8BAhrkn2oww6Uw885atf962Q4fqZo48QdO3EQA7oCEDSXa6optgJ1ZMds3HD9ITK5bfm4AWuoXFQ==}
 
   '@types/estree-jsx@1.0.5':
     resolution: {integrity: sha512-52CcUVNFyfb1A2ALocQw/Dd1BQFNmSdkuC3BkZ6iqhdMfQz7JWOFRuJFloOzjk+6WijU56m9oKXFAXc7o3Towg==}
@@ -9445,6 +9451,13 @@ snapshots:
       '@types/ms': 2.1.0
 
   '@types/deep-eql@4.0.2': {}
+
+  '@types/eslint-plugin-jsx-a11y@6.10.1(jiti@2.7.0)(supports-color@10.2.2)':
+    dependencies:
+      eslint: 9.39.5(jiti@2.7.0)(supports-color@10.2.2)
+    transitivePeerDependencies:
+      - jiti
+      - supports-color
 
   '@types/estree-jsx@1.0.5':
     dependencies:
