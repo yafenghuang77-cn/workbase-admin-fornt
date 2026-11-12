@@ -3,8 +3,6 @@ export default {
   defaultSeverity: 'error',
   ignoreFiles: [
     '**/node_modules/**',
-    '**/dist/**',
-    '**/dist-ssr/**',
     // Matches Vite build.outDir.
     'workbase/**',
     '**/coverage/**',
