@@ -10,9 +10,9 @@
 
 本次核对的核心安装版本为 React 19.3.1、Vite 8.3.5、antd 6.6.8、`@ant-design/pro-components` 3.1.15-8、TanStack Query 5.105.0 和 TanStack Router 1.170.46。这里记录的是扫描快照；后续开发使用 `pnpm list --depth 0` 重新确认，尤其不要将 ProComponents 2.x 示例直接套到当前 3.x 预发布版本。
 
-- 已接入：React Compiler、共享 QueryClient、开发模式 Query Devtools、antd 应用级主题与反馈上下文，以及代码、样式、文档、类型和 Vitest 检查。
+- 已接入：React Compiler、按会话共享的 QueryClient、开发模式 Query Devtools、antd 应用级主题与反馈上下文、Axios 请求层和登录入口，以及代码、样式、文档、类型和 Vitest 检查。
 - 路由使用 TanStack Router 文件路由，定义位于 `src/routes`，路由实例位于 `src/router/index.ts`。独立首页位于 `src/pages/welcome`，部署地址是 `/workbase/`，旧地址 `/workbase/welcome` 会跳转到首页。
-- 尚未接入：业务页面、统一 Axios 请求封装、登录权限和监控初始化。
+- 尚未接入：业务页面、业务权限和监控初始化。
 - Tailwind、Orval、MSW、Playwright 等已预装，但尚无对应业务接入或完整工作流。依赖预打包配置不代表功能已经实现。
 - 当前 Vite 配置为基础路径 `/workbase/`、开发端口 `8888`、API 代理目标 `http://127.0.0.1:9999`、构建目录 `workbase`。这些值以 `vite.config.ts` 为准。
 
@@ -73,6 +73,18 @@ Vite 插件在开发和构建时生成 `src/routeTree.gen.ts`。提交路由变�
 | 测试与请求模拟             | Vitest、Testing Library、MSW；E2E 用 Playwright            | 延续现有测试入口，不再引入第二套测试框架                                               |
 
 已有依赖存在重叠不等于需要立即删除。新增依赖前说明现有能力的缺口、兼容性和包体影响；清理时结合源码、配置和生成流程逐项确认，不能只按 Knip 输出批量卸载。
+
+## HTTP 请求
+
+从 `@/utils/http` 导入 `http`、`uploadFile` 和 `downloadFile`。请求路径使用 `/users` 这类 API 相对路径。四个 mode 均默认使用 `VITE_API_BASE_URL=/api`，开发时使用现有 Vite 代理。部署时可在构建环境注入 API 地址，沿用默认值时由部署环境提供同源 `/api`。
+
+`http.get<T>`、`http.post<T>` 和 `http.request<T>` 默认从 `{ data, code?, message? }` 提取 `data`，可用 `configureResponse` 设置字段和成功码，或用 `setResponseParser` 更换默认解析器。单个请求可以给 `http.request` 传自定义解析函数。空响应和需要读取状态或响应头的请求使用 `http.requestRaw<T>`。业务失败抛 `ApiError`，响应格式错误抛 `ApiResponseError`，传输和取消错误保留 Axios 类型。
+
+Query 提供的 `signal` 由普通服务函数传给 HTTP 请求。Query 和 Mutation 管理的 HTTP 请求使用 `skipDedupe: true` 和 `silent: true`，由 QueryClient 管理同键请求并在重试结束后提示失败。会话切换时会更换 QueryClient，旧会话的 Mutation 在执行 `mutationFn` 前会被取消。需要自行展示错误时可设置 `meta: { silent: true }`。React 树外可从 `@/utils/http` 调用 `notifyHttpError`、`notifyHttpWarning` 和 `notifyHttpSuccess`。
+
+无调用方 signal 的独立读请求在路径切换时取消，独立写请求可通过 `routeScoped: true` 加入。使用 `skipRouteCancel: true` 保留跨页面请求。等价的进行中请求默认取消前一次，写操作的重复提交还需通过表单提交状态控制。
+
+登录和刷新分别使用 `POST /auth/login` 和 `POST /auth/refresh`，响应的 `data` 包含 `accessToken` 和 `refreshToken`。登录请求发送 `username` 和 `password`，刷新发送 `refreshToken`。应用会为 API 请求注入 Bearer token，公开接口可设置 `skipAuth: true`。刷新后的读请求最多重放一次，写操作仅在调用方设置 `replayOnUnauthorized: true` 时重放。刷新凭据缺失或被明确拒绝时结束会话，临时故障和响应格式错误保留会话。[HTTP 请求层设计与验收](./docs/http-layer-design.md)
 
 ## Skill、MCP 与插件使用
 
