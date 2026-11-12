@@ -7,8 +7,6 @@ import {
 import { act, render, screen, waitFor } from '@testing-library/react';
 import { expect, test } from 'vitest';
 
-import { RouteLayout } from '@/layouts/RouteLayout';
-import { AppProviders } from '@/providers/AppProviders';
 import { buildNavigation } from '@/router/navigation';
 import type { AppRouteConfig } from '@/router/register-routes';
 import { registerRoutes } from '@/router/register-routes';
@@ -50,7 +48,7 @@ const config = [
 ] as const satisfies readonly AppRouteConfig[];
 
 function renderAt(path: string) {
-  const rootRoute = createRootRoute({ component: RouteLayout });
+  const rootRoute = createRootRoute();
   const history = createMemoryHistory({ initialEntries: [path] });
   const router = createRouter({
     routeTree: rootRoute.addChildren(registerRoutes(rootRoute, config)),
@@ -59,37 +57,38 @@ function renderAt(path: string) {
     defaultPendingMinMs: 0,
   });
 
-  render(
-    <AppProviders>
-      <RouterProvider router={router} />
-    </AppProviders>,
-  );
+  render(<RouterProvider router={router} />);
   return { router, history };
 }
 
-test('component 渲染配置指定的页面并默认使用后台布局', async () => {
-  renderAt('/workbase/custom');
+test('渲染配置指定的页面并记录默认布局元数据', async () => {
+  const { router } = renderAt('/workbase/custom');
 
   expect(await screen.findByRole('heading', { name: '配置指定的页面' })).toBeVisible();
-  expect(screen.getByRole('link', { name: 'Workbase 首页' })).toBeVisible();
-  expect(screen.getByTitle('自定义页面')).toBeVisible();
+  expect(router.state.matches.at(-1)?.staticData.page).toMatchObject({
+    name: '自定义页面',
+    layout: true,
+  });
 });
 
-test('layout false 继承到子页并完全移除后台导航', async () => {
-  renderAt('/workbase/preview/open');
+test('子页继承 layout false 并保留面包屑元数据', async () => {
+  const { router } = renderAt('/workbase/preview/open');
 
   expect(await screen.findByRole('heading', { name: '独立全屏页面' })).toBeVisible();
-  expect(document.title).toBe('全屏子页 - Workbase');
-  expect(screen.queryByRole('link', { name: 'Workbase 首页' })).not.toBeInTheDocument();
-  expect(screen.queryByRole('button', { name: '打开用户菜单' })).not.toBeInTheDocument();
+  expect(router.state.matches.at(-1)?.staticData.page).toMatchObject({
+    layout: false,
+    breadcrumb: [
+      { path: '/preview', name: '独立展示' },
+      { path: '/preview/open', name: '全屏子页' },
+    ],
+  });
 });
 
-test('子页可覆盖父级 layout false 恢复后台布局', async () => {
-  renderAt('/workbase/preview/admin');
+test('子页可覆盖父级 layout false', async () => {
+  const { router } = renderAt('/workbase/preview/admin');
 
   expect(await screen.findByRole('heading', { name: '配置指定的页面' })).toBeVisible();
-  expect(screen.getByRole('link', { name: 'Workbase 首页' })).toBeVisible();
-  expect(screen.getByTitle('后台子页')).toBeVisible();
+  expect(router.state.matches.at(-1)?.staticData.page?.layout).toBe(true);
 });
 
 test('显式 redirect 不依赖子项顺序且不拦截直接访问子页', async () => {
@@ -114,7 +113,6 @@ test('hideInMenu 只隐藏菜单，页面仍可直接访问', async () => {
   renderAt('/workbase/hidden');
 
   expect(await screen.findByRole('heading', { name: '配置指定的页面' })).toBeVisible();
-  expect(screen.getByTitle('隐藏详情')).toBeVisible();
 });
 
 test('动态路由正确提取参数且不影响静态页面导航', async () => {

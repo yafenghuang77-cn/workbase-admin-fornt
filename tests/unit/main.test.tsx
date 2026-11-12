@@ -34,7 +34,7 @@ test('入口在根节点中渲染当前页面', async () => {
   });
 
   expect(await screen.findByRole('heading', { name: '欢迎使用 Workbase' })).toBeVisible();
-  expect(window.location.pathname).toBe(`${import.meta.env.BASE_URL}welcome`);
+  expect(window.location.pathname).toBe(import.meta.env.BASE_URL);
 });
 
 test('缺少根节点时报告明确的启动错误', async () => {

@@ -4,11 +4,11 @@
 
 ## 当前状态
 
-目前处于业务开发前的基础设施阶段，启动后显示占位页面和开发模式的 React Query Devtools。
+目前处于业务开发前的基础设施阶段。启动后访问 `/workbase/` 即可打开独立首页，旧地址 `/workbase/welcome` 会跳转到首页。开发模式提供 React Query Devtools。
 
-- 已接入：React 入口、共享 QueryClient、React Compiler、Vite 多环境命令、开发代理、构建分包与 Gzip，以及代码检查、Vitest 测试和 GitHub Actions。
-- 尚未实现：业务页面、菜单路由、登录权限、统一请求封装、antd 应用级主题与反馈上下文、监控初始化。
-- 已预装但按需接入：ProComponents、antd、TanStack Router、Zustand、图表、编辑器和文档处理库等。Router 的 Vite 插件目前仍被注释；Tailwind、Orval、MSW 和 Playwright 尚未形成对应业务工作流。
+- 已接入：React Compiler、TanStack Router 代码路由、antd 应用级主题与反馈上下文、共享 QueryClient、Vite 开发与构建配置，以及代码检查、Vitest 测试和 GitHub Actions。
+- 尚未实现：业务页面、登录权限、统一请求封装和监控初始化。
+- 已预装但按需接入：ProComponents、Zustand、图表、编辑器和文档处理库等。Tailwind、Orval、MSW 和 Playwright 尚未形成对应业务工作流。
 
 本项目使用 Vite 客户端架构，不是 Umi Max 或 Next.js 项目。依赖已安装、已预打包不代表功能已经实现。
 
@@ -111,9 +111,9 @@ pnpm preview
 
 手动分组仅包含 `react-vendor`（React、React DOM、Scheduler）和 `antd-vendor`（antd、ProComponents、图标及底层组件），两组均启用 `entriesAware`。其余模块交给 Rolldown 按实际引用分包。
 
-**分包不等于懒加载。** 页面与重型功能应通过动态导入按需加载；图表、编辑器、PDF、Excel、Word 等依赖不要统一从应用入口导入。当前入口实际接入的是 React 与 Query 基础设施，没有业务页面或 antd 组件。
+重型页面和功能应通过动态导入按需加载；图表、编辑器、PDF、Excel、Word 等依赖不要统一从应用入口导入。
 
-部署时将产物映射到 `/workbase/`；后续接入客户端路由时，再配置对应的页面回退规则。更改基础路径时需同步路由与部署配置。
+部署时将产物映射到 `/workbase/`，并将应用内页面路径回退到该目录的 `index.html`。更改基础路径时需同步路由与部署配置。
 
 ## 数据请求与状态
 

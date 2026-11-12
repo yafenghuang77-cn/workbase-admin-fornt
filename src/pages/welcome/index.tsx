@@ -26,12 +26,6 @@ const resources = [
   },
 ];
 
-const sections = [
-  { title: 'Dashboard', description: '分析、监控与工作台', detail: '从全局视角开启日常工作。' },
-  { title: '页面模板', description: '表单、列表与详情', detail: '按不同工作场景找到对应入口。' },
-  { title: '个人空间', description: '个人中心与个人设置', detail: '集中管理与你相关的信息。' },
-];
-
 type WelcomeStyles = CSSProperties & Record<`--welcome-${string}`, string>;
 
 export default function WelcomePage() {
@@ -41,16 +35,15 @@ export default function WelcomePage() {
     '--welcome-primary-bg': token.colorPrimaryBg,
     '--welcome-text': token.colorText,
     '--welcome-secondary': token.colorTextSecondary,
-    '--welcome-border': token.colorBorderSecondary,
     '--welcome-radius': `${token.borderRadiusLG}px`,
     '--welcome-gap': `${token.marginLG}px`,
   };
 
   return (
-    <div className="welcome-page" style={styles}>
+    <main className="welcome-page" style={styles}>
       <div className="welcome-intro">
         <p className="welcome-eyebrow">WORKBASE · 企业级工作台</p>
-        <h2 className="welcome-heading">欢迎使用 Workbase</h2>
+        <h1 className="welcome-heading">欢迎使用 Workbase</h1>
         <p className="welcome-description">一个清晰、有序的工作空间，让日常管理更从容。</p>
       </div>
 
@@ -81,24 +74,6 @@ export default function WelcomePage() {
           </a>
         ))}
       </div>
-
-      <Card classNames={{ body: 'welcome-guide-body' }}>
-        <div className="welcome-guide-heading">
-          <h2 className="welcome-guide-title">从这里开始</h2>
-          <p className="welcome-description">
-            通过左侧菜单浏览功能目录，点击「欢迎」即可随时回到这里。
-          </p>
-        </div>
-        <div className="welcome-sections">
-          {sections.map((section) => (
-            <div key={section.title} className="welcome-section">
-              <h3 className="welcome-section-title">{section.title}</h3>
-              <p className="welcome-section-description">{section.description}</p>
-              <p className="welcome-section-detail">{section.detail}</p>
-            </div>
-          ))}
-        </div>
-      </Card>
-    </div>
+    </main>
   );
 }

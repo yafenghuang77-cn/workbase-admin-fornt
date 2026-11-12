@@ -1,7 +1,9 @@
 .welcome-page {
   display: grid;
   gap: var(--welcome-gap);
-  padding-bottom: 24px;
+  max-width: 1280px;
+  margin-inline: auto;
+  padding: clamp(16px, 4vw, 48px);
   color: var(--welcome-text);
 }
 
@@ -94,46 +96,6 @@
   transform: rotate(45deg);
 }
 
-.welcome-guide-body {
-  padding: 32px;
-}
-
-.welcome-guide-heading {
-  padding-bottom: 28px;
-  border-bottom: 1px solid var(--welcome-border);
-}
-
-.welcome-guide-title {
-  margin: 0 0 12px;
-  font-size: 20px;
-  font-weight: 600;
-}
-
-.welcome-sections {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 32px;
-  padding-top: 28px;
-}
-
-.welcome-section-title {
-  margin: 0 0 16px;
-  font-size: 16px;
-  font-weight: 600;
-}
-
-.welcome-section-description {
-  margin: 0 0 8px;
-  font-size: 14px;
-}
-
-.welcome-section-detail {
-  margin: 0;
-  color: var(--welcome-secondary);
-  font-size: 13px;
-  line-height: 1.8;
-}
-
 @media (max-width: 1100px) {
   .welcome-resources {
     grid-template-columns: 1fr;
@@ -143,14 +105,5 @@
 @media (max-width: 575px) {
   .welcome-intro {
     padding-top: 0;
-  }
-
-  .welcome-guide-body {
-    padding: 24px;
-  }
-
-  .welcome-sections {
-    grid-template-columns: 1fr;
-    gap: 24px;
   }
 }
