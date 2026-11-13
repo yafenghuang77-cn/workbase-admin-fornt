@@ -20,7 +20,7 @@ const refreshAttemptPrefix = 'workbase-auth-refresh-attempt:';
 const refreshAttemptLifetime = 20_000;
 const refreshAttemptPollInterval = 100;
 
-let pendingRefresh: { version: number; promise: Promise<RefreshResult> } | undefined;
+const pendingRefreshes = new Map<string, Promise<RefreshResult>>();
 let expiryRegistration: { handler: () => void } | undefined;
 const expiredErrors = new WeakSet<object>();
 
@@ -40,6 +40,10 @@ export function isSessionExpiredError(error: unknown): boolean {
 function synchronizedSession() {
   useAuthStore.getState().syncSession();
   return useAuthStore.getState();
+}
+
+function refreshKey(version: number, accessToken: string | null, refreshToken: string): string {
+  return JSON.stringify([version, accessToken, refreshToken]);
 }
 
 function expireSession(version: number, refreshToken: string | null): boolean {
@@ -215,24 +219,41 @@ export async function handleUnauthorized(
   if (state.sessionVersion !== session.version) throw originalError;
 
   const { accessToken, refreshToken } = state;
-  if (accessToken !== null && accessToken !== session.accessToken) return accessToken;
-  if (refreshToken === null)
+  if (refreshToken === null) {
     return rejectUnauthorized(originalError, expireSession(session.version, refreshToken));
+  }
 
-  if (pendingRefresh?.version !== session.version) {
+  const credentialKey = refreshKey(session.version, accessToken, refreshToken);
+  let pending = pendingRefreshes.get(credentialKey);
+  if (pending === undefined) {
+    if (accessToken !== null && accessToken !== session.accessToken) return accessToken;
+
     const promise = Promise.resolve()
       .then(() => coordinateRefresh(session, refreshToken, refreshTokens))
       .finally(() => {
-        if (pendingRefresh?.promise === promise) pendingRefresh = undefined;
+        if (pendingRefreshes.get(credentialKey) === promise) pendingRefreshes.delete(credentialKey);
       });
-    pendingRefresh = { version: session.version, promise };
+    pendingRefreshes.set(credentialKey, promise);
+    pending = promise;
   }
 
-  const result = await pendingRefresh.promise;
-  if ('expired' in result) return rejectUnauthorized(originalError, result.expired);
+  while (true) {
+    const result = await pending;
+    if ('expired' in result) return rejectUnauthorized(originalError, result.expired);
 
-  const active = synchronizedSession();
-  if (active.sessionVersion !== session.version || active.accessToken === null) throw originalError;
+    const active = synchronizedSession();
+    if (active.sessionVersion !== session.version || active.accessToken === null)
+      throw originalError;
 
-  return active.accessToken;
+    // A newer token may already have received a 401 while this request was waiting.
+    const next =
+      active.refreshToken === null
+        ? undefined
+        : pendingRefreshes.get(
+            refreshKey(active.sessionVersion, active.accessToken, active.refreshToken),
+          );
+    if (next === undefined) return active.accessToken;
+
+    pending = next;
+  }
 }

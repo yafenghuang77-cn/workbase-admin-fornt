@@ -9,6 +9,7 @@ export interface DownloadOptions {
   params?: unknown;
   data?: unknown;
   filename?: string;
+  rawJson?: boolean;
   signal?: AbortSignal | undefined;
   silent?: boolean;
 }
@@ -49,6 +50,7 @@ export async function downloadFile({
   params,
   data,
   filename,
+  rawJson = false,
   signal,
   silent,
 }: DownloadOptions): Promise<void> {
@@ -70,7 +72,7 @@ export async function downloadFile({
 
       const disposition = readResponseHeader(headers, 'content-disposition');
       const headerFilename = parseContentDispositionFilename(disposition);
-      if (headerFilename === undefined && !/^\s*attachment\b/i.test(disposition)) {
+      if (!rawJson && headerFilename === undefined && !/^\s*attachment\b/i.test(disposition)) {
         assertBusinessSuccess(await readJsonBlob(body, headers), status);
       }
       return { blob: body, headerFilename };

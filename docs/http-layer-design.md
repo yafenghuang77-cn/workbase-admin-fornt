@@ -86,26 +86,30 @@ export async function removeUser(userId: string) {
 登录使用 `POST /auth/login`，请求体包含 `username`、`password`。刷新使用 `POST /auth/refresh`，请求体包含 `refreshToken`。两者成功响应的业务数据包含非空的 `accessToken` 和 `refreshToken`。活动会话标识保存在 `localStorage` 的 `workbase-auth-session`，令牌按会话写入 `workbase-auth:<sessionId>`。旧版 `workbase-auth` 中的令牌仍可读取。
 
 - 默认注入 `Authorization: Bearer <accessToken>`。公开接口使用 `skipAuth: true`。仅跳过自动刷新时使用 `skipRefresh: true`。配置 `auth` 时使用 Axios Basic Auth。
-- 同一标签页内，同一会话的并发 401 共享一次刷新。支持 Web Locks 时，同一会话跨标签页串行刷新。使用共享存储的兼容路径会在刷新被拒绝时，先等待仍在进行的同会话刷新，再判断是否结束会话。其他请求已经更新令牌时，后续 401 可直接使用新令牌。
+- 同一标签页内，会话和令牌均匹配的并发 401 共享一次刷新。支持 Web Locks 时，同一会话跨标签页串行刷新。使用共享存储的兼容路径会在刷新被拒绝时，先等待仍在进行的同会话刷新，再判断是否结束会话。旧令牌的 401 会复用当前令牌。如果当前凭据已在本标签页刷新，先等待该任务再决定重放用的令牌。
 - 刷新完成后，读请求最多重放一次。写请求仅在显式设置 `replayOnUnauthorized: true` 时重放。重放使用首次发送前保存的参数、请求体和请求头。默认转换下的原生 HTML 表单在首次发送前保存为 FormData。原生表单使用自定义请求转换时保留初次派发的原生表单参数，并跳过自动重放。流式请求和依赖外部状态的自定义转换需要由调用方保证可重放。
 - 缺少刷新令牌，或者刷新接口以 HTTP 400、401、403 或业务错误 `ApiError` 拒绝凭据时，清空会话和 Query 缓存，由应用路由跳转到 `/login`，部署路径为 `/workbase/login`。
 - 断网、超时、5xx 或刷新响应格式错误保留会话，并返回失败给调用方。各标签页同步活动会话变化。退出或重新登录后，旧请求的结果和刷新响应随之失效，迟到的刷新只允许更新或清理其所属会话。
+- 登录和主动退出通过 Web Locks 串行修改活动会话。Web Locks 不可用时使用 IndexedDB 事务协调，两种方式均不可用时保留写入前复核。主动退出也写入新的会话标识，并删除旧令牌。登录提交在写入前核对发起时的会话，发现会话已变化或登录已取消时丢弃结果。`setTokens`、`setTokensForLogin` 和 `clearTokens` 均需等待提交完成。
 
 ### 4.4 去重和路由取消
 
-进行中的等价请求取消前者。去重键包含 HTTP 方法、归一化 URL 和查询参数、请求头、凭据选项、响应类型、会话版本和可序列化请求体。URL 校验、去重和派发使用进入请求层时固定的地址。JSON 对象字段顺序和普通查询参数顺序不影响比较，数组元素顺序保留。请求头的禁用标记，以及省略请求体和显式 JSON `null` 各自比较。Basic Auth、自定义序列化、FormData 和含二进制字段的请求不参与默认去重。可通过 `skipDedupe: true` 由调用方管理并发。
+进行中的等价请求取消前者。去重键包含 HTTP 方法、归一化 URL 和查询参数、请求头、凭据选项、响应类型、会话版本和可序列化请求体。URL 校验、去重和派发使用进入请求层时固定的地址。去重回调执行完毕后，请求派发前再次检查会话。JSON 对象字段顺序和普通查询参数顺序不影响比较，数组元素顺序保留。请求头中的禁用标记、显式 `undefined` 和缺失字段各自比较。省略请求体和显式 JSON `null` 也各自比较。Basic Auth、自定义序列化、FormData、含二进制字段的请求，以及由 Axios 将对象或数组自动编码为 URL-encoded 或 multipart 表单的请求，均跳过默认去重。可通过 `skipDedupe: true` 由调用方管理并发。
 
 客户端取消可能发生在写请求已经发出之后。提交按钮使用 Mutation 的 `isPending` 防止重复操作，需要重放的写接口应满足对应的幂等约定。
 
 - 独立的 `GET`、`HEAD`、`OPTIONS` 请求默认随路由路径变化取消。同路径重新加载、搜索参数或 hash 变化保留请求。
 - 独立写请求可以使用 `routeScoped: true` 加入路由取消。使用 `skipRouteCancel: true` 保留跨页面请求。
-- 传入 `signal` 时由调用方管理请求生命周期。例如 Query 向服务函数传递自身的 signal，路由 loader 可以传递自身的 signal。取消会及时结束异步响应解析的等待。
+- 传入 `signal` 时由调用方管理请求生命周期。例如 Query 向服务函数传递自身的 signal，路由 loader 可以传递自身的 signal。HTTP 请求同时兼容 Axios 的 `cancelToken`。两种取消方式都能及时结束该请求对共享刷新或异步响应解析的等待。
+- 会话切换时清理路由缓存和预加载结果。当前路由进入待加载状态，等新会话的 loader 完成后再展示数据。
 
 ### 4.5 文件上传和下载
 
 `uploadFile<T>` 接收 `File` 或 `Blob`，通过 FormData 发送。默认文件字段名为 `file`，可用 `fieldName` 和 `extraFields` 配置表单。浏览器设置 multipart 边界。助手转发 `onProgress` 与 `signal`，并接受 `silent` 和 `routeScoped`。
 
 `downloadFile` 支持 GET 或 POST，接收 `params`、`data`、`signal` 和 `silent`。文件名依次使用显式 `filename`、`Content-Disposition` 的 UTF-8 `filename*`、普通 `filename`、默认值 `download`。下载完成后清理对象 URL，且下载请求跨路由保留。下载响应是未声明为文件的 JSON 时，助手识别其中的业务错误。HTTP 失败返回 JSON Blob 时，错误提示可使用其中的 `message`，Axios 错误类型和状态码保持可用。跨域下载需要 API 暴露 `Content-Disposition` 响应头，前端才能读取服务端文件名。
+
+已知接口成功时直接返回 JSON 文件，可传入 `rawJson: true` 跳过成功响应的业务码检查。附件头不可读取时可同时传入 `filename: 'inventory.json'`。HTTP 失败仍按原有规则处理。
 
 ## 5. 双 Token 刷新队列流程
 
@@ -136,11 +140,12 @@ sequenceDiagram
 
 查询和 Mutation 通过普通服务函数调用 HTTP 层。查询将 Query 提供的 `signal` 传给 HTTP 请求。两类请求都使用 `silent: true` 和 `skipDedupe: true`，由 Query 负责同键请求和最终失败提示。
 
-每个活动会话使用独立的 QueryClient。会话切换时清理旧客户端并重建查询订阅。旧会话的 Mutation 如果仍在等待异步 `onMutate`，恢复时会在调用 `mutationFn` 前被取消。
+每个活动会话使用独立的 QueryClient。会话切换时清理旧客户端并重建查询订阅。旧客户端启动的查询会在执行 `queryFn` 前取消。仍在等待异步 `onMutate` 的旧 Mutation 会在调用 `mutationFn` 前取消。因离线暂停的旧 Mutation 在网络和焦点恢复、满足 TanStack Query 的继续条件后以 Axios 取消错误结束。旧客户端也会停止发送全局错误提示。在 `mutationFn` 中使用 `getMutationSessionSignal(context)` 获取发起会话的取消信号，并传给业务服务和 HTTP 请求。需要异步准备时，在等待前获取信号，准备完成后继续使用该信号。
 
 ```typescript
 import { queryOptions, useMutation, useQueryClient } from '@tanstack/react-query';
 
+import { getMutationSessionSignal } from '@/query-client';
 import { http } from '@/utils/http';
 
 interface User {
@@ -167,14 +172,15 @@ export function userQueryOptions(userId: string) {
   });
 }
 
-function createUser(payload: CreateUserInput) {
-  return http.post<User>('/users', payload, { silent: true, skipDedupe: true });
+function createUser(payload: CreateUserInput, signal: AbortSignal) {
+  return http.post<User>('/users', payload, { signal, silent: true, skipDedupe: true });
 }
 
 export function useCreateUser() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: createUser,
+    mutationFn: (payload: CreateUserInput, context) =>
+      createUser(payload, getMutationSessionSignal(context)),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['users'] }),
   });
 }
@@ -189,16 +195,18 @@ import { useState } from 'react';
 
 import { useMutation } from '@tanstack/react-query';
 
+import { getMutationSessionSignal } from '@/query-client';
 import { uploadFile } from '@/utils/http';
 
 export function useUploadFile() {
   const [progress, setProgress] = useState(0);
   const mutation = useMutation({
     onMutate: () => setProgress(0),
-    mutationFn: (file: File) =>
+    mutationFn: (file: File, context) =>
       uploadFile({
         url: '/files/upload',
         file,
+        signal: getMutationSessionSignal(context),
         silent: true,
         onProgress: ({ loaded, total }) => {
           if (total !== undefined && total > 0) {
@@ -233,16 +241,16 @@ pnpm test
 pnpm build
 ```
 
-| 测试文件                                                                       | 主要覆盖                                 |
-| ------------------------------------------------------------------------------ | ---------------------------------------- |
-| [HTTP 请求](../tests/unit/http.test.ts)                                        | 默认和自定义解析、完整响应、取消和去重   |
-| [Token 刷新](../tests/unit/http-refresh.test.ts)                               | 并发刷新、失效、临时失败和重放           |
-| [跨标签页会话](../tests/unit/http-session.test.ts)                             | 会话同步、旧刷新隔离和持久化迁移         |
-| [重放快照](../tests/unit/http-replay.test.ts)                                  | 保留请求参数、请求头、表单和二进制数据   |
-| [文件助手](../tests/unit/http-files.test.ts)                                   | 上传表单、进度和取消，下载 Blob 和文件名 |
-| [QueryClient](../tests/unit/query-client.test.ts)                              | 重试、静默、自定义提示和最终失败         |
-| [Query 会话隔离](../tests/unit/http-query-session.test.tsx)                    | 切换会话后重新查询，拦截旧 Mutation      |
-| [应用入口](../tests/unit/main.test.tsx)、[路由](../tests/unit/router.test.tsx) | 启动、登录跳转、路由取消和 403           |
+| 测试文件                                                                       | 主要覆盖                                            |
+| ------------------------------------------------------------------------------ | --------------------------------------------------- |
+| [HTTP 请求](../tests/unit/http.test.ts)                                        | 默认和自定义解析、完整响应、两种取消方式和去重      |
+| [Token 刷新](../tests/unit/http-refresh.test.ts)                               | 并发刷新、失效、临时失败和重放                      |
+| [跨标签页会话](../tests/unit/http-session.test.ts)                             | 登录提交串行、会话同步、旧刷新隔离和持久化迁移      |
+| [重放快照](../tests/unit/http-replay.test.ts)                                  | 保留请求参数、请求头、表单和二进制数据              |
+| [文件助手](../tests/unit/http-files.test.ts)                                   | 上传表单、进度和取消，下载 Blob、原始 JSON 和文件名 |
+| [QueryClient](../tests/unit/query-client.test.ts)                              | 重试、静默、自定义提示和最终失败                    |
+| [Query 会话隔离](../tests/unit/http-query-session.test.tsx)                    | 切换会话后重新查询，拦截旧查询、Mutation 和错误提示 |
+| [应用入口](../tests/unit/main.test.tsx)、[路由](../tests/unit/router.test.tsx) | 启动、登录跳转、路由取消和 403                      |
 
 浏览器验收可使用本地模拟响应。部署地址和真实认证接口按部署契约联调。
 

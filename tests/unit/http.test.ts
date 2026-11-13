@@ -1,7 +1,8 @@
 import type { AxiosAdapter } from 'axios';
-import { AxiosError, AxiosHeaders, CanceledError } from 'axios';
+import axios, { AxiosError, AxiosHeaders, CanceledError } from 'axios';
 import { expect, test, vi } from 'vitest';
 
+import { useAuthStore } from '@/stores/auth';
 import { ApiError, ApiResponseError, http } from '@/utils/http';
 import { cancelRouteRequests } from '@/utils/http/cancel';
 
@@ -158,6 +159,55 @@ test('调用方取消时立即结束异步解析等待', async () => {
   }
 });
 
+test('Axios CancelToken 取消异步解析并保留原始取消错误', async () => {
+  const source = axios.CancelToken.source();
+  let markParsing: (() => void) | undefined;
+  let finishParsing: ((value: string) => void) | undefined;
+  const parsingStarted = new Promise<void>((resolve) => {
+    markParsing = resolve;
+  });
+  const parsing = new Promise<string>((resolve) => {
+    finishParsing = resolve;
+  });
+  const unsubscribe = vi.spyOn(source.token, 'unsubscribe');
+  const request = http.request(
+    { url: '/parse', cancelToken: source.token, adapter: respond({ data: null }) },
+    () => {
+      markParsing?.();
+      return parsing;
+    },
+  );
+  await parsingStarted;
+
+  try {
+    source.cancel('取消解析');
+    await expect(request).rejects.toBe(source.token.reason);
+    expect(unsubscribe).toHaveBeenCalledOnce();
+  } finally {
+    finishParsing?.('晚到的解析结果');
+  }
+});
+
+test('预先取消的 CancelToken 不替换仍在进行的同键请求', async () => {
+  const first = holdRequest('first');
+  const ongoing = http.request({ url: '/users', adapter: first.adapter });
+  const signal = await first.started;
+  const source = axios.CancelToken.source();
+  source.cancel('发起前取消');
+  const adapter = vi.fn(respond({ data: null }));
+
+  try {
+    await expect(http.request({ url: '/users', adapter, cancelToken: source.token })).rejects.toBe(
+      source.token.reason,
+    );
+    expect(adapter).not.toHaveBeenCalled();
+    expect(signal.aborted).toBe(false);
+  } finally {
+    first.finish();
+    await ongoing;
+  }
+});
+
 test('被替换的请求结束后，后续同键请求仍能取消当前请求', async () => {
   const first = holdRequest('first');
   const second = holdRequest('second');
@@ -211,6 +261,45 @@ test('取消旧请求的回调不能替换新请求已经校验的 URL', async (
   ]);
 });
 
+test('去重回调切换会话时新请求在进入 adapter 前取消', async () => {
+  await useAuthStore.getState().setTokens({ accessToken: 'account-a', refreshToken: 'refresh-a' });
+  const previous = holdRequest('previous');
+  const latestAdapter = vi.fn(respond({ data: 'latest' }));
+  let switchSession: Promise<void> | undefined;
+  const oldAdapter: AxiosAdapter = (config) => {
+    if (!(config.signal instanceof AbortSignal)) throw new Error('Axios 未收到 AbortSignal');
+    config.signal.addEventListener(
+      'abort',
+      () => {
+        switchSession = useAuthStore
+          .getState()
+          .setTokens({ accessToken: 'account-b', refreshToken: 'refresh-b' });
+      },
+      { once: true },
+    );
+    return previous.adapter(config);
+  };
+  const data = { name: '同一条记录' };
+  const oldOutcome = Promise.allSettled([http.post('/records', data, { adapter: oldAdapter })]);
+
+  try {
+    await previous.started;
+    await expect(http.post('/records', data, { adapter: latestAdapter })).rejects.toMatchObject({
+      code: 'ERR_CANCELED',
+    });
+
+    await switchSession;
+    expect(useAuthStore.getState().accessToken).toBe('account-b');
+    expect(latestAdapter).not.toHaveBeenCalled();
+    await expect(oldOutcome).resolves.toMatchObject([
+      { status: 'rejected', reason: { code: 'ERR_CANCELED' } },
+    ]);
+  } finally {
+    previous.finish();
+    await useAuthStore.getState().clearTokens();
+  }
+});
+
 test('JSON 写入完成后释放去重记录', async () => {
   const first = holdRequest('first');
   const data = { name: '用户' };
@@ -256,6 +345,67 @@ test('参数和嵌套 JSON 字段换序时仍取消前一个同内容请求', as
     { status: 'rejected', reason: { code: 'ERR_CANCELED' } },
   ]);
   await expect(latest).resolves.toBe('second');
+});
+
+test.each([
+  {
+    label: '直接设置 URL-encoded 请求头',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    expected: ['tags%5B%5D=first&tags%5B%5D=second', 'tags%5B%5D=second&tags%5B%5D=first'],
+  },
+  {
+    label: '在 common 请求头中设置 URL-encoded 类型',
+    headers: {
+      common: new AxiosHeaders({
+        'content-type': 'application/x-www-form-urlencoded;charset=UTF-8',
+      }),
+    },
+    expected: ['tags%5B%5D=first&tags%5B%5D=second', 'tags%5B%5D=second&tags%5B%5D=first'],
+  },
+  {
+    label: '在 post 请求头中设置 multipart 类型',
+    headers: { post: new AxiosHeaders({ 'Content-Type': 'multipart/form-data' }) },
+    expected: [
+      ['first', 'second'],
+      ['second', 'first'],
+    ],
+  },
+])('$label 时保留重复字段顺序不同的两个请求', async ({ headers, expected }) => {
+  const adapter = vi.fn(respond({ data: 'ok' }));
+  const options = { adapter, headers, env: { FormData } };
+  const results = await Promise.allSettled([
+    http.post('/tags', { 'tags[]': ['first'], tags: ['second'] }, options),
+    http.post('/tags', { tags: ['second'], 'tags[]': ['first'] }, options),
+  ]);
+
+  expect(
+    adapter.mock.calls.map(([config]) => {
+      const data: unknown = config.data;
+      return data instanceof FormData ? data.getAll('tags[]') : data;
+    }),
+  ).toEqual(expected);
+  expect(results).toEqual([
+    { status: 'fulfilled', value: 'ok' },
+    { status: 'fulfilled', value: 'ok' },
+  ]);
+});
+
+test('显式 JSON 请求头覆盖 common 表单类型后仍按 JSON 去重', async () => {
+  const adapter = vi.fn(respond({ data: 'ok' }));
+  const headers = {
+    common: new AxiosHeaders({ 'Content-Type': 'multipart/form-data' }),
+    'Content-Type': 'application/json',
+  };
+  const results = await Promise.allSettled([
+    http.post('/tags', { first: 'a', second: 'b' }, { adapter, headers }),
+    http.post('/tags', { second: 'b', first: 'a' }, { adapter, headers }),
+  ]);
+
+  expect(adapter.mock.calls[0]?.[0].data).toBe('{"first":"a","second":"b"}');
+  expect(results).toMatchObject([
+    { status: 'rejected', reason: { code: 'ERR_CANCELED' } },
+    { status: 'fulfilled', value: 'ok' },
+  ]);
 });
 
 test('请求数组顺序和 Basic Auth 凭据不同的请求各自完成', async () => {
@@ -318,7 +468,7 @@ test('不同的凭据模式及省略请求体和显式 JSON null 不互相取消
   ]);
 });
 
-test('禁用 Axios 默认请求头和使用默认请求头时各自完成', async () => {
+test.each([false, undefined])('显式 Axios 请求头 %s 与默认请求头各自完成', async (value) => {
   const suppressed = holdRequest('suppressed');
   const defaults = holdRequest('default');
   const suppressedAdapter = vi.fn(suppressed.adapter);
@@ -326,7 +476,7 @@ test('禁用 Axios 默认请求头和使用默认请求头时各自完成', asyn
   const results = Promise.allSettled([
     http.get('/headers', {
       adapter: suppressedAdapter,
-      headers: new AxiosHeaders({ Accept: false }),
+      headers: new AxiosHeaders().set('Accept', value),
     }),
     http.get('/headers', { adapter: defaultAdapter, headers: new AxiosHeaders() }),
   ]);
@@ -338,7 +488,7 @@ test('禁用 Axios 默认请求头和使用默认请求头时各自完成', asyn
     { status: 'fulfilled', value: 'suppressed' },
     { status: 'fulfilled', value: 'default' },
   ]);
-  expect(suppressedAdapter.mock.calls[0]?.[0].headers.get('Accept')).toBe(false);
+  expect(suppressedAdapter.mock.calls[0]?.[0].headers.get('Accept')).toBe(value);
   expect(defaultAdapter.mock.calls[0]?.[0].headers.get('Accept')).toBe('application/json');
 });
 

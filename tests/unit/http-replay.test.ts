@@ -15,13 +15,13 @@ beforeAll(() => {
   server.listen({ onUnhandledFrame: 'error' });
 });
 
-beforeEach(() => {
-  useAuthStore.getState().setTokens(oldTokens);
+beforeEach(async () => {
+  await useAuthStore.getState().setTokens(oldTokens);
 });
 
-afterEach(() => {
+afterEach(async () => {
   server.resetHandlers();
-  useAuthStore.getState().clearTokens();
+  await useAuthStore.getState().clearTokens();
   localStorage.removeItem('workbase-auth');
 });
 

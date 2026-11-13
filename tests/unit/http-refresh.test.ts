@@ -1,4 +1,5 @@
-import { AxiosError, AxiosHeaders } from 'axios';
+import type { AxiosAdapter } from 'axios';
+import axios, { AxiosError, AxiosHeaders } from 'axios';
 import { http as mockHttp, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
 import { afterAll, afterEach, beforeAll, beforeEach, expect, test, vi } from 'vitest';
@@ -20,15 +21,15 @@ beforeAll(() => {
   server.listen({ onUnhandledFrame: 'error' });
 });
 
-beforeEach(() => {
-  useAuthStore.getState().setTokens(oldTokens);
+beforeEach(async () => {
+  await useAuthStore.getState().setTokens(oldTokens);
 });
 
-afterEach(() => {
+afterEach(async () => {
   server.resetHandlers();
   unregisterExpiry?.();
   unregisterExpiry = undefined;
-  useAuthStore.getState().clearTokens();
+  await useAuthStore.getState().clearTokens();
   localStorage.clear();
 });
 
@@ -112,7 +113,7 @@ test('刷新凭据失效只通知一次并向各请求返回原始 401', async (
 });
 
 test('没有刷新凭据时结束会话并保留原始 401', async () => {
-  useAuthStore.getState().clearTokens();
+  await useAuthStore.getState().clearTokens();
   const onExpired = monitorExpiry();
   const originalError = httpError(401);
   const refresh = vi.fn();
@@ -150,7 +151,7 @@ test('登出后的旧刷新成功不会恢复原会话', async () => {
   const pending = handleUnauthorized(originalError, captureSession(), refresh);
   await Promise.resolve();
 
-  useAuthStore.getState().clearTokens();
+  await useAuthStore.getState().clearTokens();
 
   await expect(pending).rejects.toBe(originalError);
   expect(refresh).toHaveBeenCalledTimes(1);
@@ -167,7 +168,7 @@ test.each([httpError(403), new ApiError(1001, '刷新凭据无效', 200)])(
     await Promise.resolve();
 
     const nextLoginTokens = { accessToken: 'another-access', refreshToken: 'another-refresh' };
-    useAuthStore.getState().setTokens(nextLoginTokens);
+    await useAuthStore.getState().setTokens(nextLoginTokens);
 
     await expect(pending).rejects.toBe(originalError);
     expect(refresh).toHaveBeenCalledTimes(1);
@@ -186,6 +187,117 @@ function respondToRefresh() {
   );
   return refreshCall;
 }
+
+test('CancelToken 取消单个请求的刷新等待，其他请求仍可重放', async () => {
+  const source = axios.CancelToken.source();
+  const canceledAccess = vi.fn(() => new HttpResponse(null, { status: 401 }));
+  const continuedAccess = vi.fn(({ request }: { request: Request }) =>
+    request.headers.get('authorization') === `Bearer ${refreshedTokens.accessToken}`
+      ? HttpResponse.json({ data: { id: 2 } })
+      : new HttpResponse(null, { status: 401 }),
+  );
+  let markRefreshing: (() => void) | undefined;
+  let finishRefreshing: (() => void) | undefined;
+  const refreshingStarted = new Promise<void>((resolve) => {
+    markRefreshing = resolve;
+  });
+  const refreshing = new Promise<void>((resolve) => {
+    finishRefreshing = resolve;
+  });
+  const refresh = vi.fn(async () => {
+    markRefreshing?.();
+    await refreshing;
+    return HttpResponse.json({ data: refreshedTokens });
+  });
+  server.use(
+    mockHttp.get('*/users/1', canceledAccess),
+    mockHttp.get('*/users/2', continuedAccess),
+    mockHttp.post('*/auth/refresh', refresh),
+  );
+
+  const canceled = http.get('/users/1', { cancelToken: source.token });
+  await refreshingStarted;
+  const continued = http.get('/users/2');
+
+  try {
+    source.cancel('停止等待刷新');
+    await expect(canceled).rejects.toBe(source.token.reason);
+  } finally {
+    finishRefreshing?.();
+  }
+
+  await expect(continued).resolves.toEqual({ id: 2 });
+  expect(refresh).toHaveBeenCalledOnce();
+  expect(canceledAccess).toHaveBeenCalledOnce();
+  expect(continuedAccess).toHaveBeenCalledTimes(2);
+});
+
+test('旧令牌的迟到 401 等待当前凭据刷新后再重放', async () => {
+  const latestTokens = { accessToken: 'latest-access', refreshToken: 'latest-refresh' };
+  let rejectOldRequest: (() => void) | undefined;
+  let markRefreshing: (() => void) | undefined;
+  let finishRefreshing: (() => void) | undefined;
+  const initialResponse = new Promise<never>((_resolve, reject) => {
+    rejectOldRequest = () => reject(httpError(401));
+  });
+  const refreshingStarted = new Promise<void>((resolve) => {
+    markRefreshing = resolve;
+  });
+  const refreshing = new Promise<void>((resolve) => {
+    finishRefreshing = resolve;
+  });
+  const refresh = vi.fn(async ({ request }: { request: Request }) => {
+    const body: unknown = await request.json();
+    if (body && typeof body === 'object' && 'refreshToken' in body) {
+      if (body.refreshToken === oldTokens.refreshToken) {
+        return HttpResponse.json({ data: refreshedTokens });
+      }
+      if (body.refreshToken === refreshedTokens.refreshToken) {
+        markRefreshing?.();
+        await refreshing;
+        return HttpResponse.json({ data: latestTokens });
+      }
+    }
+    return new HttpResponse(null, { status: 400 });
+  });
+  server.use(mockHttp.post('*/auth/refresh', refresh));
+
+  function authorize(expected: string): AxiosAdapter {
+    return async (config) => {
+      if (config.headers.get('Authorization') !== `Bearer ${expected}`) throw httpError(401);
+      return { config, data: { data: expected }, headers: {}, status: 200, statusText: 'OK' };
+    };
+  }
+
+  const delayed = vi.fn(authorize(latestTokens.accessToken)).mockReturnValueOnce(initialResponse);
+  const oldOutcome = http.get('/old', { adapter: delayed, silent: true });
+  const oldResult = oldOutcome.catch((error: unknown) => error);
+
+  try {
+    await expect(
+      http.get('/rotate', { adapter: authorize(refreshedTokens.accessToken) }),
+    ).resolves.toBe(refreshedTokens.accessToken);
+    const current = http
+      .get('/current', { adapter: authorize(latestTokens.accessToken) })
+      .catch((error: unknown) => error);
+    await refreshingStarted;
+    rejectOldRequest?.();
+    await new Promise<void>((resolve) => {
+      setTimeout(resolve, 0);
+    });
+    expect(delayed).toHaveBeenCalledOnce();
+
+    finishRefreshing?.();
+    await expect(current).resolves.toBe(latestTokens.accessToken);
+    await expect(oldResult).resolves.toBe(latestTokens.accessToken);
+    expect(delayed).toHaveBeenCalledTimes(2);
+    expect(refresh).toHaveBeenCalledTimes(2);
+  } finally {
+    rejectOldRequest?.();
+    finishRefreshing?.();
+    await oldResult;
+  }
+});
 
 test.each([
   { replaySucceeds: true, expected: { status: 'fulfilled', value: { id: 1 } } },

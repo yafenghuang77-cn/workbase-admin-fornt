@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 
-import { useNavigate } from '@tanstack/react-router';
+import { useRouter } from '@tanstack/react-router';
 import { Alert, Button, Card, Form, Input } from 'antd';
 
 import { useAuthStore } from '@/stores/auth';
@@ -12,7 +12,7 @@ import { signIn } from './service';
 import './index.less';
 
 export function LoginPage() {
-  const navigate = useNavigate();
+  const router = useRouter();
   const activeRequest = useRef<AbortController | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -23,18 +23,23 @@ export function LoginPage() {
     if (activeRequest.current !== null) return;
 
     const controller = new AbortController();
-    const { sessionVersion } = useAuthStore.getState();
     activeRequest.current = controller;
+    useAuthStore.getState().syncSession();
+    if (controller.signal.aborted) return;
+
+    const { sessionVersion } = useAuthStore.getState();
+    const location = router.state.location.href;
     setSubmitting(true);
     setErrorMessage(null);
 
     signIn(credentials, controller.signal)
-      .then((tokens) => {
-        const auth = useAuthStore.getState();
-        if (controller.signal.aborted || auth.sessionVersion !== sessionVersion) return;
+      .then(async (tokens) => {
+        const committed = await useAuthStore
+          .getState()
+          .setTokensForLogin(sessionVersion, tokens, controller.signal);
+        if (!committed || router.state.location.href !== location) return;
 
-        auth.setTokens(tokens);
-        return navigate({ to: '/', replace: true });
+        return router.navigate({ to: '/', replace: true });
       })
       .finally(() => {
         activeRequest.current = null;

@@ -80,7 +80,7 @@ Vite 插件在开发和构建时生成 `src/routeTree.gen.ts`。提交路由变�
 
 `http.get<T>`、`http.post<T>` 和 `http.request<T>` 默认从 `{ data, code?, message? }` 提取 `data`，可用 `configureResponse` 设置字段和成功码，或用 `setResponseParser` 更换默认解析器。单个请求可以给 `http.request` 传自定义解析函数。空响应和需要读取状态或响应头的请求使用 `http.requestRaw<T>`。业务失败抛 `ApiError`，响应格式错误抛 `ApiResponseError`，传输和取消错误保留 Axios 类型。
 
-Query 提供的 `signal` 由普通服务函数传给 HTTP 请求。Query 和 Mutation 管理的 HTTP 请求使用 `skipDedupe: true` 和 `silent: true`，由 QueryClient 管理同键请求并在重试结束后提示失败。会话切换时会更换 QueryClient，旧会话的 Mutation 在执行 `mutationFn` 前会被取消。需要自行展示错误时可设置 `meta: { silent: true }`。React 树外可从 `@/utils/http` 调用 `notifyHttpError`、`notifyHttpWarning` 和 `notifyHttpSuccess`。
+Query 提供的 `signal` 由普通服务函数传给 HTTP 请求。Mutation 在 `mutationFn` 中使用 `getMutationSessionSignal(context)` 获取发起会话的信号，在异步准备前获取并传给后续 HTTP 请求。Query 和 Mutation 管理的 HTTP 请求使用 `skipDedupe: true` 和 `silent: true`，由 QueryClient 管理同键请求并在重试结束后提示失败。会话切换时会更换 QueryClient，旧客户端启动的查询和 Mutation 在执行请求函数前会被取消。需要自行展示错误时可设置 `meta: { silent: true }`。React 树外可从 `@/utils/http` 调用 `notifyHttpError`、`notifyHttpWarning` 和 `notifyHttpSuccess`。
 
 无调用方 signal 的独立读请求在路径切换时取消，独立写请求可通过 `routeScoped: true` 加入。使用 `skipRouteCancel: true` 保留跨页面请求。等价的进行中请求默认取消前一次，写操作的重复提交还需通过表单提交状态控制。
 

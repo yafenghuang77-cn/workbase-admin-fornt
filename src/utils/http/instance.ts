@@ -1,10 +1,10 @@
-import type { AxiosRequestConfig } from 'axios';
+import type { AxiosHeaderValue, AxiosRequestConfig, RawAxiosRequestHeaders } from 'axios';
 import axios, { AxiosHeaders, CanceledError, isAxiosError, isCancel } from 'axios';
 import { isPlainObject } from 'es-toolkit/predicate';
 
 import { parseAuthTokens, useAuthStore } from '@/stores/auth';
 
-import { trackRequest, waitForRequest } from './cancel';
+import { getRequestCancellation, trackRequest, waitForRequest } from './cancel';
 import {
   captureBlobErrorMessage,
   getErrorMessage,
@@ -43,6 +43,40 @@ const client = axios.create({
 
 const readMethods = new Set(['GET', 'HEAD', 'OPTIONS']);
 
+function encodeRequestHeaders(headers: unknown): unknown {
+  if (!(headers instanceof AxiosHeaders) && !isPlainObject(headers)) return headers;
+
+  // Preserve own entries in merge order, including explicit undefined and Axios disable flags.
+  return Object.entries<unknown>(headers).map(([name, value]) =>
+    value === undefined ? [name] : [name, encodeRequestHeaders(value)],
+  );
+}
+
+function usesFormEncoding(requestHeaders: HttpRequestConfig['headers'], method: string): boolean {
+  const defaults: { headers: RawAxiosRequestHeaders } = { headers: client.defaults.headers };
+  const { headers } =
+    requestHeaders === undefined
+      ? defaults
+      : axios.mergeConfig<unknown, unknown>(defaults, { headers: requestHeaders });
+  const common: unknown = headers?.common;
+  const methodHeaders: unknown = headers?.[method.toLowerCase() || 'get'];
+  // Axios combines the common and method buckets before applying the flat headers.
+  const effectiveHeaders = new AxiosHeaders({
+    ...(typeof common === 'object' && common),
+    ...(typeof methodHeaders === 'object' && methodHeaders),
+  });
+  for (const [name, value] of Object.entries<AxiosHeaderValue | undefined>(headers ?? {})) {
+    if (name.trim().toLowerCase() === 'content-type') effectiveHeaders.set(name, value);
+  }
+  const contentType = effectiveHeaders.getContentType();
+
+  return (
+    (typeof contentType === 'string' || Array.isArray(contentType)) &&
+    (contentType.includes('application/x-www-form-urlencoded') ||
+      contentType.includes('multipart/form-data'))
+  );
+}
+
 function getRequestKey<D>(
   config: HttpRequestConfig<D>,
   method: string,
@@ -66,23 +100,23 @@ function getRequestKey<D>(
   }
 
   try {
+    // Axios can map distinct object keys to the same form field, so their order can matter.
+    if (typeof data === 'object' && data !== null && usesFormEncoding(config.headers, method)) {
+      return undefined;
+    }
+
     const url = new URL(
       client.getUri({ ...config, baseURL, allowAbsoluteUrls: false }),
       'http://localhost',
     );
     url.hash = '';
     url.searchParams.sort();
-    // AxiosHeaders.toJSON omits flags such as false that suppress default headers.
-    const headers =
-      config.headers instanceof AxiosHeaders
-        ? Object.fromEntries(Object.entries<unknown>(config.headers))
-        : config.headers;
 
     return JSON.stringify(
       {
         method,
         url: url.href,
-        headers: JSON.stringify(headers),
+        headers: encodeRequestHeaders(config.headers),
         responseType: config.responseType,
         withCredentials: config.withCredentials,
         withXSRFToken: config.withXSRFToken,
@@ -113,10 +147,8 @@ function getRequestKey<D>(
 
 function assertActive(signal: AbortSignal, session: AuthSession | undefined): void {
   if (session !== undefined) useAuthStore.getState().syncSession();
-  if (
-    signal.aborted ||
-    (session !== undefined && useAuthStore.getState().sessionVersion !== session.version)
-  ) {
+  if (signal.aborted) throw getRequestCancellation(signal);
+  if (session !== undefined && useAuthStore.getState().sessionVersion !== session.version) {
     throw new CanceledError('请求已取消');
   }
 }
@@ -151,6 +183,7 @@ async function send<T, D>(
           ? AxiosHeaders.concat(request.headers, authorization)
           : { ...request.headers, ...authorization };
     }
+    assertActive(signal, session);
     return client.request<T, HttpResponse<T, D>, D, unknown>(requestConfig);
   }
 
@@ -201,7 +234,7 @@ async function execute<T, D, R>(
     config.skipRouteCancel !== true &&
     config.signal === undefined &&
     (config.routeScoped ?? readMethods.has(method));
-  const pending = trackRequest(config.signal, key, routeScoped);
+  const pending = trackRequest(config.signal, key, routeScoped, config.cancelToken);
 
   try {
     const response = await send<T, D>(config, method, pending.signal, session);

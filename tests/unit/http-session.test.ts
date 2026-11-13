@@ -37,7 +37,7 @@ function activeRecordKey(): string {
   return `workbase-auth:${id}`;
 }
 
-function deferredRefresh() {
+function deferredRefresh(result = rotatedTokens) {
   let resolve: ((tokens: typeof oldTokens) => void) | undefined;
   let reject: ((error: Error) => void) | undefined;
   const pending = new Promise<typeof oldTokens>((onSuccess, onError) => {
@@ -47,7 +47,7 @@ function deferredRefresh() {
 
   return {
     refresh: vi.fn(() => pending),
-    succeed: () => resolve?.(rotatedTokens),
+    succeed: () => resolve?.(result),
     fail: () => reject?.(unauthorized()),
   };
 }
@@ -56,6 +56,20 @@ function attemptCount(): number {
   return Array.from({ length: localStorage.length }, (_entry, index) =>
     localStorage.key(index),
   ).filter((key) => key?.startsWith('workbase-auth-refresh-attempt:') === true).length;
+}
+
+function mockWebLocks() {
+  const held = new Map<string, Promise<unknown>>();
+  const request = vi.fn((name: string, work: () => unknown) => {
+    const queued = (held.get(name) ?? Promise.resolve()).then(work);
+    held.set(
+      name,
+      queued.catch(() => undefined),
+    );
+    return queued;
+  });
+  vi.stubGlobal('navigator', { locks: { request } });
+  return request;
 }
 
 beforeEach(() => {
@@ -82,13 +96,106 @@ test('旧版令牌记录可以读取并在刷新后迁移', async () => {
   expect(reloaded.useAuthStore.getState()).toMatchObject(rotatedTokens);
 });
 
+test.each(['登录', '退出'])('跨标签页%s从最终检查到活动指针写入保持独占', async (action) => {
+  mockWebLocks();
+  const first = await openTab();
+  await first.useAuthStore.getState().setTokens(oldTokens);
+  const second = await openTab();
+  const initialRecord = activeRecordKey();
+  const { version: firstVersion } = sessionOf(first);
+  const { version: secondVersion } = sessionOf(second);
+  const setItem = Storage.prototype.setItem;
+  let queued: Promise<boolean> | undefined;
+  const save = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (
+    this: Storage,
+    key,
+    value,
+  ) {
+    if (key === 'workbase-auth-session') {
+      save.mockRestore();
+      queued = second.useAuthStore.getState().setTokensForLogin(secondVersion, rotatedTokens);
+    }
+    setItem.call(this, key, value);
+  });
+
+  try {
+    const auth = first.useAuthStore.getState();
+    const committed =
+      action === '登录'
+        ? await auth.setTokensForLogin(firstVersion, newLogin)
+        : await auth.clearTokens().then(() => true);
+    expect(committed).toBe(true);
+    await expect(queued).resolves.toBe(false);
+    expect(second.useAuthStore.getState().accessToken).toBe(
+      action === '登录' ? newLogin.accessToken : null,
+    );
+    expect(localStorage.getItem(initialRecord)).toBeNull();
+    expect(Object.keys(localStorage).filter((key) => key.startsWith('workbase-auth:'))).toEqual(
+      action === '登录' ? [activeRecordKey()] : [],
+    );
+  } finally {
+    save.mockRestore();
+    await queued;
+  }
+});
+
+test.each([
+  { name: '无历史标识', marker: null },
+  { name: '旧版空标识', marker: '' },
+])('跨标签页登录后又退出时丢弃未同步中间状态的旧登录（$name）', async ({ marker }) => {
+  mockWebLocks();
+  if (marker !== null) {
+    localStorage.setItem('workbase-auth-session', marker);
+    localStorage.setItem('workbase-auth', JSON.stringify({ state: oldTokens, version: 0 }));
+  }
+
+  const first = await openTab();
+  const { version, accessToken } = sessionOf(first);
+  expect(accessToken).toBeNull();
+
+  const other = await openTab();
+  await other.useAuthStore.getState().setTokens(newLogin);
+  await other.useAuthStore.getState().clearTokens();
+  const logoutId = localStorage.getItem('workbase-auth-session');
+
+  await expect(first.useAuthStore.getState().setTokensForLogin(version, oldTokens)).resolves.toBe(
+    false,
+  );
+  expect(sessionOf(first)).toEqual({ version: version + 1, accessToken: null });
+  expect(logoutId).toBeTruthy();
+  expect(localStorage.getItem('workbase-auth-session')).toBe(logoutId);
+  expect(Object.keys(localStorage).filter((key) => key.startsWith('workbase-auth:'))).toEqual([]);
+});
+
+test('等待共享提交锁的登录在页面取消后不写入令牌', async () => {
+  const request = mockWebLocks();
+  const tab = await openTab();
+  const controller = new AbortController();
+  const { version } = sessionOf(tab);
+  let release: (() => void) | undefined;
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  const hold = request('workbase-auth-session-commit', () => gate);
+  const login = tab.useAuthStore.getState().setTokensForLogin(version, newLogin, controller.signal);
+
+  controller.abort();
+  release?.();
+
+  await hold;
+  await expect(login).resolves.toBe(false);
+  expect(localStorage.length).toBe(0);
+  expect(tab.useAuthStore.getState().accessToken).toBeNull();
+});
+
 test('过期刷新在通过检查后遇到另一标签页登录也无法覆盖新会话', async () => {
   const oldTab = await openTab();
-  oldTab.useAuthStore.getState().setTokens(oldTokens);
+  await oldTab.useAuthStore.getState().setTokens(oldTokens);
   const oldRecord = activeRecordKey();
   const newTab = await openTab();
   const original = unauthorized();
   const setItem = Storage.prototype.setItem;
+  let newSession: Promise<void> | undefined;
   const save = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (
     this: Storage,
     key,
@@ -96,7 +203,7 @@ test('过期刷新在通过检查后遇到另一标签页登录也无法覆盖�
   ) {
     if (key === oldRecord) {
       save.mockRestore();
-      newTab.useAuthStore.getState().setTokens(newLogin);
+      newSession = newTab.useAuthStore.getState().setTokens(newLogin);
     }
     setItem.call(this, key, value);
   });
@@ -107,6 +214,7 @@ test('过期刷新在通过检查后遇到另一标签页登录也无法覆盖�
     ).rejects.toBe(original);
   } finally {
     save.mockRestore();
+    await newSession;
   }
 
   expect(localStorage.getItem(oldRecord)).toBeNull();
@@ -117,7 +225,7 @@ test('过期刷新在通过检查后遇到另一标签页登录也无法覆盖�
 
 test('旧标签页刷新失败不能清理后来登录的会话', async () => {
   const oldTab = await openTab();
-  oldTab.useAuthStore.getState().setTokens(oldTokens);
+  await oldTab.useAuthStore.getState().setTokens(oldTokens);
   const newTab = await openTab();
   const original = unauthorized();
   const onExpired = vi.fn();
@@ -136,7 +244,7 @@ test('旧标签页刷新失败不能清理后来登录的会话', async () => {
   await Promise.resolve();
   expect(refresh).toHaveBeenCalledOnce();
 
-  newTab.useAuthStore.getState().setTokens(newLogin);
+  await newTab.useAuthStore.getState().setTokens(newLogin);
   failRefresh?.();
 
   await expect(outcome).resolves.toEqual([{ status: 'rejected', reason: original }]);
@@ -147,7 +255,7 @@ test('旧标签页刷新失败不能清理后来登录的会话', async () => {
 
 test('同一会话的刷新令牌已在其他标签页轮换时复用新令牌', async () => {
   const oldTab = await openTab();
-  oldTab.useAuthStore.getState().setTokens(oldTokens);
+  await oldTab.useAuthStore.getState().setTokens(oldTokens);
   const otherTab = await openTab();
   const original = unauthorized();
   let failRefresh: (() => void) | undefined;
@@ -169,20 +277,60 @@ test('同一会话的刷新令牌已在其他标签页轮换时复用新令牌',
   expect(oldTab.useAuthStore.getState()).toMatchObject(rotatedTokens);
 });
 
+test('轮换后的凭据收到 401 时，等待中的旧请求也加入新刷新', async () => {
+  const tab = await openTab();
+  await tab.useAuthStore.getState().setTokens(oldTokens);
+  const other = await openTab();
+  const original = deferredRefresh();
+  const nextTokens = { accessToken: 'next-access', refreshToken: 'next-refresh' };
+  const next = deferredRefresh(nextTokens);
+  const originalOutcome = Promise.allSettled([
+    tab.handleUnauthorized(unauthorized(), sessionOf(tab), original.refresh),
+  ]);
+
+  try {
+    await Promise.resolve();
+    expect(original.refresh).toHaveBeenCalledExactlyOnceWith(oldTokens.refreshToken);
+
+    await other.handleUnauthorized(unauthorized(), sessionOf(other), async () => rotatedTokens);
+    tab.useAuthStore.getState().syncSession();
+    const rotatedSession = sessionOf(tab);
+    const nextOutcome = Promise.allSettled([
+      tab.handleUnauthorized(unauthorized(), rotatedSession, next.refresh),
+    ]);
+    await Promise.resolve();
+    expect(next.refresh).toHaveBeenCalledExactlyOnceWith(rotatedTokens.refreshToken);
+
+    original.fail();
+    // Allow the original refresh to settle while the next refresh is still pending.
+    await new Promise<void>((resolve) => {
+      setTimeout(resolve, 0);
+    });
+
+    const duplicateRefresh = vi.fn(async () => nextTokens);
+    const duplicate = tab.handleUnauthorized(unauthorized(), rotatedSession, duplicateRefresh);
+    next.succeed();
+
+    await expect(nextOutcome).resolves.toEqual([
+      { status: 'fulfilled', value: nextTokens.accessToken },
+    ]);
+    await expect(originalOutcome).resolves.toEqual([
+      { status: 'fulfilled', value: nextTokens.accessToken },
+    ]);
+    await expect(duplicate).resolves.toBe(nextTokens.accessToken);
+    expect(duplicateRefresh).not.toHaveBeenCalled();
+  } finally {
+    original.succeed();
+    next.succeed();
+  }
+});
+
 test('Web Locks 串行处理同一会话的跨标签页刷新', async () => {
-  const held = new Map<string, Promise<unknown>>();
-  const request = vi.fn((name: string, work: () => Promise<unknown>) => {
-    const queued = (held.get(name) ?? Promise.resolve()).then(work);
-    held.set(
-      name,
-      queued.catch(() => undefined),
-    );
-    return queued;
-  });
-  vi.stubGlobal('navigator', { locks: { request } });
+  const request = mockWebLocks();
 
   const first = await openTab();
-  first.useAuthStore.getState().setTokens(oldTokens);
+  await first.useAuthStore.getState().setTokens(oldTokens);
+  request.mockClear();
   const second = await openTab();
   const winner = deferredRefresh();
   const follower = vi.fn(async () => {
@@ -212,7 +360,7 @@ test('Web Locks 串行处理同一会话的跨标签页刷新', async () => {
 
 test('无 Web Locks 时先返回的刷新失败会等待另一个标签页的成功结果', async () => {
   const first = await openTab();
-  first.useAuthStore.getState().setTokens(oldTokens);
+  await first.useAuthStore.getState().setTokens(oldTokens);
   const second = await openTab();
   const winner = deferredRefresh();
   const loser = deferredRefresh();
@@ -243,7 +391,7 @@ test('无 Web Locks 时先返回的刷新失败会等待另一个标签页的成
 
 test('同一会话的所有跨标签页刷新均失败时仍结束会话', async () => {
   const first = await openTab();
-  first.useAuthStore.getState().setTokens(oldTokens);
+  await first.useAuthStore.getState().setTokens(oldTokens);
   const record = activeRecordKey();
   const second = await openTab();
   const firstAttempt = deferredRefresh();
@@ -276,7 +424,7 @@ test('同一会话的所有跨标签页刷新均失败时仍结束会话', async
 
 test('storage 事件更新本页会话并只在切换账号或登出时推进版本', async () => {
   const first = await openTab();
-  first.useAuthStore.getState().setTokens(oldTokens);
+  await first.useAuthStore.getState().setTokens(oldTokens);
   const other = await openTab();
   const stop = first.watchAuthSession();
   const initialVersion = first.useAuthStore.getState().sessionVersion;
@@ -292,14 +440,14 @@ test('storage 事件更新本页会话并只在切换账号或登出时推进版
       sessionVersion: initialVersion,
     });
 
-    other.useAuthStore.getState().setTokens(newLogin);
+    await other.useAuthStore.getState().setTokens(newLogin);
     syncKey('workbase-auth-session');
     expect(first.useAuthStore.getState()).toMatchObject({
       ...newLogin,
       sessionVersion: initialVersion + 1,
     });
 
-    other.useAuthStore.getState().clearTokens();
+    await other.useAuthStore.getState().clearTokens();
     syncKey('workbase-auth-session');
     expect(first.useAuthStore.getState()).toMatchObject({
       accessToken: null,

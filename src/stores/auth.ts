@@ -1,5 +1,7 @@
 import { create } from 'zustand';
 
+import { withSessionCommitLock } from './session-commit';
+
 export interface AuthTokens {
   accessToken: string;
   refreshToken: string;
@@ -9,8 +11,13 @@ interface AuthState {
   accessToken: string | null;
   refreshToken: string | null;
   sessionVersion: number;
-  setTokens: (tokens: AuthTokens) => void;
-  clearTokens: () => void;
+  setTokens: (tokens: AuthTokens) => Promise<void>;
+  setTokensForLogin: (
+    version: number,
+    tokens: AuthTokens,
+    signal?: AbortSignal,
+  ) => Promise<boolean>;
+  clearTokens: () => Promise<void>;
   syncSession: () => void;
   getSharedSessionId: () => string | null;
   clearTokensForSession: (version: number, expectedRefreshToken: string | null) => boolean;
@@ -32,6 +39,10 @@ const sessionTokensPrefix = `${legacyTokensKey}:`;
 const legacySessionId = 'legacy';
 const emptySession: StoredSession = { id: null, tokens: null };
 const emptyTokens = { accessToken: null, refreshToken: null };
+
+function isSameSession(first: StoredSession, second: StoredSession): boolean {
+  return first.id === second.id && (first.tokens === null) === (second.tokens === null);
+}
 
 function hasAuthTokens(value: unknown): value is AuthTokens {
   return (
@@ -128,10 +139,7 @@ export const useAuthStore = create<AuthState>()((set, get) => {
   function applySession(next: StoredSession, forceVersionChange = false): void {
     const state = get();
     const tokens = next.tokens ?? emptyTokens;
-    const changed =
-      forceVersionChange ||
-      next.id !== session.id ||
-      (next.tokens === null) !== (session.tokens === null);
+    const changed = forceVersionChange || !isSameSession(next, session);
     session = next;
     if (
       changed ||
@@ -147,19 +155,55 @@ export const useAuthStore = create<AuthState>()((set, get) => {
     if (stored !== undefined) applySession(stored);
   }
 
-  function replaceSession(next: StoredSession): void {
-    syncSession();
-    const previousId = session.id;
-    const stored = withStorage((localStorage) => {
-      if (next.id !== null) {
-        localStorage.setItem(`${sessionTokensPrefix}${next.id}`, JSON.stringify(next.tokens));
-      }
-      localStorage.setItem(activeSessionKey, next.id ?? '');
-      if (previousId !== null) localStorage.removeItem(`${sessionTokensPrefix}${previousId}`);
-      localStorage.removeItem(legacyTokensKey);
-      return readStoredSession(localStorage);
-    });
-    applySession(stored ?? next, true);
+  async function replaceSession(
+    tokens: AuthTokens | null,
+    expectedVersion?: number,
+    signal?: AbortSignal,
+  ): Promise<boolean> {
+    // Keep a new generation even when logout leaves no token record.
+    const id = createSessionId();
+    const next = {
+      id,
+      tokens:
+        tokens === null
+          ? null
+          : { accessToken: tokens.accessToken, refreshToken: tokens.refreshToken },
+    };
+
+    function commit(): boolean {
+      if (signal?.aborted === true) return false;
+      if (expectedVersion !== undefined && get().sessionVersion !== expectedVersion) return false;
+
+      return (
+        withStorage((localStorage) => {
+          const previous = readStoredSession(localStorage);
+          if (expectedVersion !== undefined && !isSameSession(previous, session)) return false;
+
+          const nextRecord = next.tokens === null ? null : `${sessionTokensPrefix}${id}`;
+          if (nextRecord !== null) localStorage.setItem(nextRecord, JSON.stringify(next.tokens));
+
+          if (
+            expectedVersion !== undefined &&
+            !isSameSession(readStoredSession(localStorage), previous)
+          ) {
+            if (nextRecord !== null) localStorage.removeItem(nextRecord);
+            return false;
+          }
+
+          localStorage.setItem(activeSessionKey, id);
+          if (previous.id !== null) localStorage.removeItem(`${sessionTokensPrefix}${previous.id}`);
+          localStorage.removeItem(legacyTokensKey);
+          return true;
+        }) ?? true
+      );
+    }
+
+    const outcome = storage === undefined ? commit() : withSessionCommitLock(commit);
+    const committed = typeof outcome === 'boolean' ? outcome : await outcome;
+    const active = withStorage(readStoredSession) ?? (committed ? next : session);
+    const replaced = committed && isSameSession(active, next);
+    applySession(active, replaced);
+    return replaced;
   }
 
   function updateSession(
@@ -202,9 +246,13 @@ export const useAuthStore = create<AuthState>()((set, get) => {
   return {
     ...(session.tokens ?? emptyTokens),
     sessionVersion: 0,
-    setTokens: ({ accessToken, refreshToken }) =>
-      replaceSession({ id: createSessionId(), tokens: { accessToken, refreshToken } }),
-    clearTokens: () => replaceSession(emptySession),
+    setTokens: async (tokens) => {
+      await replaceSession(tokens);
+    },
+    setTokensForLogin: (version, tokens, signal) => replaceSession(tokens, version, signal),
+    clearTokens: async () => {
+      await replaceSession(null);
+    },
     syncSession,
     getSharedSessionId: () => (storage === undefined ? null : session.id),
     clearTokensForSession: (version, expectedRefreshToken) =>

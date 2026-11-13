@@ -121,10 +121,26 @@ test('下载可覆盖文件名并保留声明为附件的 JSON', async () => {
   vi.runOnlyPendingTimers();
 });
 
+test('指定 rawJson 时下载没有附件头的原始 JSON', async () => {
+  vi.useFakeTimers();
+  const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+  const blob = new Blob(['{"code":"INV-42","name":"Inventory export"}'], {
+    type: 'application/json',
+  });
+  respondWithFile(blob);
+
+  await downloadFile({ url: '/inventory/export', filename: 'inventory.json', rawJson: true });
+
+  expect(createObjectURL).toHaveBeenCalledWith(blob);
+  expect(click).toHaveBeenCalledOnce();
+  expect(click.mock.contexts[0]).toHaveProperty('download', 'inventory.json');
+  vi.runOnlyPendingTimers();
+});
+
 test('下载识别 JSON 业务错误并保留 Axios 请求错误', async () => {
   const blob = new Blob(['{"code": 7, "message": "无法导出"}'], { type: 'application/json' });
   respondWithFile(blob);
-  const result = downloadFile({ url: '/reports', silent: true });
+  const result = downloadFile({ url: '/reports', filename: 'report.json', silent: true });
 
   await expect(result).rejects.toBeInstanceOf(ApiError);
   await expect(result).rejects.toMatchObject({ code: 7, message: '无法导出', httpStatus: 200 });
@@ -137,11 +153,12 @@ test('下载识别 JSON 业务错误并保留 Axios 请求错误', async () => {
 });
 
 test.each([
-  { caller: '独立调用', viaQuery: false, mimeType: 'application/json' },
-  { caller: 'Query', viaQuery: true, mimeType: '' },
+  { caller: '独立调用', viaQuery: false, mimeType: 'application/json', rawJson: false },
+  { caller: 'Query', viaQuery: true, mimeType: '', rawJson: false },
+  { caller: '原始 JSON 下载', viaQuery: false, mimeType: 'application/json', rawJson: true },
 ])(
   '$caller 下载失败时显示 JSON Blob 中的错误并保留原始 AxiosError',
-  async ({ viaQuery, mimeType }) => {
+  async ({ viaQuery, mimeType, rawJson }) => {
     const { http: actualHttp } = await vi.importActual<{ http: typeof http }>(
       '@/utils/http/instance',
     );
@@ -168,7 +185,7 @@ test.each([
     const unregister = registerHttpNotifier(notify);
 
     try {
-      const fetchDownload = () => downloadFile({ url: '/reports', silent: viaQuery });
+      const fetchDownload = () => downloadFile({ url: '/reports', silent: viaQuery, rawJson });
       const result = viaQuery
         ? queryClient.fetchQuery({ queryKey: ['download-errors'], queryFn: fetchDownload })
         : fetchDownload();
