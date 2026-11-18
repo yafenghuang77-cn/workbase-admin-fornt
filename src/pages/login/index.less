@@ -1,0 +1,275 @@
+.login-page {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  min-height: 100vh;
+  min-height: 100dvh;
+  color: var(--ant-color-text);
+  background: var(--ant-color-bg-layout);
+}
+
+.login-brand {
+  position: relative;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  padding: clamp(32px, 6vw, 72px);
+  // 品牌渐变取自 Ant Design 预设色板 blue-7 / blue-9，仅作品牌装饰面。
+  background:
+    radial-gradient(1100px 520px at 88% -12%, rgba(64, 150, 255, 0.35), transparent 62%),
+    linear-gradient(160deg, #0958d9 0%, #002c8c 100%);
+}
+
+.login-brand-content {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: var(--ant-margin-lg);
+  max-width: 520px;
+}
+
+.login-brand-logo {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.login-brand-logo-mark {
+  width: 40px;
+  height: 40px;
+}
+
+.login-brand-name {
+  color: #fff;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 28px;
+}
+
+.login-brand-heading {
+  margin: 0;
+  color: #fff;
+  font-size: clamp(30px, 3.2vw, 38px);
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.login-brand-description {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 16px;
+  line-height: 1.8;
+}
+
+.login-brand-features {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.login-brand-feature {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--ant-border-radius-lg);
+}
+
+.login-brand-feature-icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  font-size: 18px;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: var(--ant-border-radius-lg);
+}
+
+.login-brand-feature-copy {
+  display: grid;
+  gap: 2px;
+}
+
+.login-brand-feature-title {
+  margin: 0;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 24px;
+}
+
+.login-brand-feature-description {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.login-brand-decoration {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+
+  &::before,
+  &::after {
+    position: absolute;
+    content: '';
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 50%;
+  }
+
+  &::before {
+    top: -140px;
+    right: -110px;
+    width: 420px;
+    height: 420px;
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  &::after {
+    bottom: -120px;
+    left: -80px;
+    width: 300px;
+    height: 300px;
+  }
+}
+
+.login-main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ant-margin-lg);
+  align-items: center;
+  justify-content: center;
+  padding: clamp(24px, 5vw, 48px);
+  background: radial-gradient(900px 480px at 100% 0%, rgba(22, 119, 255, 0.06), transparent 60%);
+}
+
+.login-card {
+  width: min(420px, 100%);
+  padding: 32px clamp(24px, 4vw, 32px);
+  background: var(--ant-color-bg-container);
+  border-radius: var(--ant-border-radius-lg);
+  box-shadow: var(--ant-box-shadow);
+}
+
+.login-card-title {
+  margin: 0 0 8px;
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 32px;
+}
+
+.login-card-subtitle {
+  margin: 0 0 24px;
+  color: var(--ant-color-text-secondary);
+}
+
+.login-form {
+  .ant-form-item {
+    margin-bottom: 16px;
+  }
+
+  .login-form-divider {
+    margin: 20px 0 16px;
+
+    .ant-divider-inner-text {
+      color: var(--ant-color-text-tertiary);
+      font-size: 12px;
+    }
+  }
+}
+
+.login-form-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+
+  .login-form-forgot {
+    height: auto;
+    padding: 0;
+    font-size: 14px;
+  }
+}
+
+.login-card-footer {
+  margin: 24px 0 0;
+  padding-top: 20px;
+  color: var(--ant-color-text-secondary);
+  text-align: center;
+  border-top: 1px solid var(--ant-color-border-secondary);
+}
+
+.login-copyright {
+  margin: 0;
+  color: var(--ant-color-text-tertiary);
+  font-size: 12px;
+  text-align: center;
+}
+
+@media (max-width: 991px) {
+  .login-page {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+  }
+
+  .login-brand {
+    justify-content: center;
+    padding: 16px 24px;
+  }
+
+  .login-brand-content {
+    justify-items: center;
+    gap: 0;
+  }
+
+  .login-brand-heading,
+  .login-brand-description,
+  .login-brand-features,
+  .login-brand-decoration {
+    display: none;
+  }
+
+  .login-main {
+    flex: 1;
+    justify-content: flex-start;
+    padding-top: clamp(32px, 8vw, 56px);
+  }
+}
+
+@media (min-width: 576px) and (max-width: 991px) {
+  .login-main {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 575px) {
+  .login-main {
+    padding: 24px 16px;
+  }
+
+  .login-card {
+    padding: 24px 16px;
+    box-shadow: none;
+    border: 1px solid var(--ant-color-border-secondary);
+  }
+
+  .login-card-title {
+    font-size: 22px;
+    line-height: 30px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-page,
+  .login-page * {
+    transition: none;
+    animation: none;
+  }
+}

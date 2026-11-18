@@ -63,7 +63,7 @@
 ## 验证与交付
 
 - 提交前执行 `pnpm check` 和 `pnpm test`；影响构建、依赖或运行时代码时再执行 `pnpm build`。
-- 当前分支保留 Vitest 配置与脚本。缺少测试文件时，`pnpm test` 会报告 `No test files found`。新增 TypeScript 测试时，先建立 `tests/tsconfig.json` 再加入根项目引用。
+- `pnpm test` 运行 Vitest 规范回归和组件、单元测试。新增 TypeScript 测试放在 `tests/unit`，由 `tests/tsconfig.json` 纳入根项目类型检查。
 - 验证规则配置时使用能触发规则的反例，不能只检查配置是否成功加载。
 - 遵循 Conventional Commits；不自动提交、推送或发布用户未要求的内容。
 - 尊重工作区已有改动，报告未运行或无法完成的检查，不将本地验证说成远程 CI 已通过。

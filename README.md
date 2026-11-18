@@ -41,7 +41,14 @@ pnpm dev
 | `pnpm preview`     | 启动 Vite 本地预览服务，默认端口为 `4173`                 |
 | `pnpm lint:unused` | 用 Knip 审查未使用的文件、导出和依赖                      |
 
-构建和独立类型检查使用 TypeScript 7，ESLint 使用 TypeScript 6 提供解析 API。Vitest 项目已配置，当前分支没有提交测试文件，`pnpm test` 会以 `No test files found` 退出。提交前运行 `pnpm check` 和 `pnpm test`，并记录实际结果。涉及依赖、构建或运行时代码时，再运行 `pnpm build`。
+构建和独立类型检查使用 TypeScript 7，ESLint 使用 TypeScript 6 提供解析 API。提交前运行 `pnpm check` 和 `pnpm test`，并记录实际结果。涉及依赖、构建或运行时代码时，再运行 `pnpm build`。
+
+## 测试
+
+- `pnpm test`：运行规范回归和组件、单元测试，无需启动前端开发服务器或后端。
+- `pnpm test:lint`：只运行 ESLint、Stylelint 与测试规则的回归用例。
+- `pnpm test --project unit`：只测试路由、登录表单、富文本文档、编辑器及上传逻辑。
+- `pnpm test:watch`：文件变更时重跑相关测试；`pnpm test:coverage`：生成 `coverage/index.html` 等覆盖率报告。
 
 ## 环境配置
 
@@ -78,6 +85,7 @@ src/
   styles/                        # 全局 Less 样式
 public/                          # 直接复制到构建目录的公共资源
 config/                          # 检查工具的兼容性配置
+tests/                           # Vitest 初始化、规范回归与组件、单元测试
 vite.config.ts                   # 开发、构建和 Vitest 配置
 ```
 

@@ -12,7 +12,7 @@
 
 - 当前定义了独立欢迎页、Tiptap 富文本演示和登录占位页。应用已接入 React Compiler、TanStack Router 文件路由及 antd 应用级主题与反馈上下文。
 - 统一 Axios 请求层、共享 QueryClient、登录认证、业务权限和监控初始化尚待接入。开发入口仍渲染 Query Devtools，缺少 QueryClient 时会报 `No QueryClient set`。
-- Tailwind、Orval、MSW 和 Playwright 等依赖按场景接入。当前分支保留 Vitest 配置和脚本，测试文件及 GitHub Actions 工作流尚缺。
+- Tailwind、Orval、MSW 和 Playwright 等依赖按场景接入。当前已接入 Vitest 规范回归与组件、单元测试，尚无 GitHub Actions 工作流。
 - Vite 使用 `/workbase/` 基础路径，开发端口为 `8888`，API 代理目标为 `http://127.0.0.1:9999`，构建目录为 `workbase/`。启动、环境和 Gzip 部署要求见 [README.md](./README.md)。
 
 `src/routes` 定义文件路由，`src/router` 维护路由实例与错误反馈，`src/pages` 放页面，`src/providers` 提供应用上下文，`src/styles` 放全局样式。页面专用组件、Hook 和样式放在所属页面附近，可复用的富文本组件位于 `src/components/rich-text-editor`。
@@ -258,9 +258,11 @@ pnpm lint:md:fix     # 修复可自动处理的文档问题
 
 ## 测试与代码清理
 
-- 所有测试统一使用 Vitest。`vite.config.ts` 保留两个项目，`lint` 在 Node 环境查找 `tests/lint-config.test.mjs`，`unit` 在 jsdom 环境查找 `tests/unit` 下的组件与单元测试。当前分支没有 `tests/`，`pnpm test` 返回 `No test files found`。
-- 组件测试使用 `.test.tsx`，工具函数测试使用 `.test.ts`。`unit` 项目也识别 `.spec` 和 JS/JSX 扩展名。测试 API 和类型从 `vitest` 显式导入。新增 TypeScript 测试时先建立 `tests/tsconfig.json`，继承应用类型配置，再将其加入根 TypeScript 项目引用。
-- 启用组件测试时，补齐 `unit` 项目指定的 `tests/setup.ts`，加载 `@testing-library/jest-dom/vitest` 并通过 `afterEach(cleanup)` 清理 DOM。样式和资源导入交给 Vite 处理。
+- 本地规范回归、组件和单元测试统一使用 Vitest。`vite.config.ts` 中的 `lint` 项目在 Node 环境运行 `tests/lint-config.test.mjs`；`unit` 项目在 jsdom 环境运行 `tests/unit` 下的测试。
+- 组件测试使用 `.test.tsx`，工具函数测试使用 `.test.ts`。`unit` 项目也识别 `.spec` 和 JS/JSX 扩展名。测试 API 和类型从 `vitest` 显式导入。`tests/tsconfig.json` 继承应用类型配置，并由根 TypeScript 项目引用，`pnpm typecheck` 同时检查测试代码。
+- `tests/setup.ts` 加载 `@testing-library/jest-dom/vitest`，补齐测试所需的浏览器 API，并在每个用例结束后清理 DOM。样式和资源导入交给 Vite 处理。
+- 路由测试使用真实路由树和独立的内存历史，覆盖登录和富文本页面直达。富文本用例使用真实编辑器和文档 Schema，覆盖粘贴后的实时预览、清空、重置及禁用编辑；上传交互测试只替换上传回调，验证失败重试和取消，不连接真实后端。
+- 登录表单测试覆盖前端校验、记住和取消记住账号、忘记密码与 SSO 提示，不测试尚未接入的认证接口。
 - 通过 `screen.getByRole` 等语义查询和 `userEvent` 测试用户行为；等待异步事件和查询，不依赖组件内部状态、CSS 选择器或直接 DOM 遍历。
 - `pnpm test` 运行全部 Vitest 项目，`pnpm test:lint` 只运行规范回归，`pnpm test:watch` 监听测试，`pnpm test:ui` 打开 Vitest UI，`pnpm test:coverage` 为 `unit` 项目生成覆盖率。`pnpm check` 与 Vitest 是独立命令。
 - Testing Library ESLint 插件的两个 waitFor 规则有自动修复缺陷。`config/eslint-testing-library.js` 保留诊断，并关闭这两条规则的自动修复。升级插件时应先用正反例重新验证兼容行为。
