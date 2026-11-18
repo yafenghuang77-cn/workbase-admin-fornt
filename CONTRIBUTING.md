@@ -6,17 +6,16 @@
 
 ## 项目现状与选型原则
 
-当前是 Vite 客户端管理端工程，不是 Umi Max 或 Next.js 项目。以 `package.json`、`pnpm-lock.yaml`、实际安装包和源码配置为准，不直接套用其他框架的路由、请求或服务端组件方案。
+当前是 Vite 客户端管理端工程。开发时以 `package.json`、`pnpm-lock.yaml`、实际安装包和源码配置为准。
 
 本次核对的核心安装版本为 React 19.3.1、Vite 8.3.5、antd 6.6.8、`@ant-design/pro-components` 3.1.15-8、TanStack Query 5.105.0 和 TanStack Router 1.170.46。这里记录的是扫描快照；后续开发使用 `pnpm list --depth 0` 重新确认，尤其不要将 ProComponents 2.x 示例直接套到当前 3.x 预发布版本。
 
-- 已接入：React Compiler、按会话共享的 QueryClient、开发模式 Query Devtools、antd 应用级主题与反馈上下文、Axios 请求层和登录入口，以及代码、样式、文档、类型和 Vitest 检查。
-- 路由使用 TanStack Router 文件路由，定义位于 `src/routes`，路由实例位于 `src/router/index.ts`。独立首页位于 `src/pages/welcome`，部署地址是 `/workbase/`，旧地址 `/workbase/welcome` 会跳转到首页。
-- 尚未接入：业务页面、业务权限和监控初始化。
-- Tailwind、Orval、MSW、Playwright 等已预装，但尚无对应业务接入或完整工作流。依赖预打包配置不代表功能已经实现。
-- 当前 Vite 配置为基础路径 `/workbase/`、开发端口 `8888`、API 代理目标 `http://127.0.0.1:9999`、构建目录 `workbase`。这些值以 `vite.config.ts` 为准。
+- 当前定义了独立欢迎页、Tiptap 富文本演示和登录占位页。应用已接入 React Compiler、TanStack Router 文件路由及 antd 应用级主题与反馈上下文。
+- 统一 Axios 请求层、共享 QueryClient、登录认证、业务权限和监控初始化尚待接入。开发入口仍渲染 Query Devtools，缺少 QueryClient 时会报 `No QueryClient set`。
+- Tailwind、Orval、MSW 和 Playwright 等依赖按场景接入。当前分支保留 Vitest 配置和脚本，测试文件及 GitHub Actions 工作流尚缺。
+- Vite 使用 `/workbase/` 基础路径，开发端口为 `8888`，API 代理目标为 `http://127.0.0.1:9999`，构建目录为 `workbase/`。启动、环境和 Gzip 部署要求见 [README.md](./README.md)。
 
-源码按职责组织：`src/routes` 定义文件路由，`src/router` 维护路由实例与错误反馈，`src/pages` 放页面，`src/providers` 提供应用上下文，`src/styles` 放全局样式。页面专用组件、Hook 和样式优先放在对应页面目录附近，实际形成跨页面业务复用后再提取。
+`src/routes` 定义文件路由，`src/router` 维护路由实例与错误反馈，`src/pages` 放页面，`src/providers` 提供应用上下文，`src/styles` 放全局样式。页面专用组件、Hook 和样式放在所属页面附近，可复用的富文本组件位于 `src/components/rich-text-editor`。
 
 开发前先搜索所属功能、共享代码和已安装依赖。复用顺序为：已有业务能力 → 适合该场景的 ProComponents / antd 或现有专用库 → 少量业务组合代码 → 有明确缺口时才新增依赖或自研。不要为了复用而引入通用 CRUD 引擎，也不要因依赖已安装就全部接入。
 
@@ -27,6 +26,7 @@
 - `__root.ts` 配置 404 和路由错误反馈。
 - `index.ts` 将 `/` 绑定到首页。
 - `welcome.ts` 使用 `beforeLoad` 和 `redirect` 处理旧地址。
+- `rich-text-editor.ts` 和 `login.ts` 分别按需加载富文本演示和登录占位页。
 
 Vite 插件在开发和构建时生成 `src/routeTree.gen.ts`。提交路由变更时一并提交该文件，以便新检出的工作区直接运行 `pnpm check` 和 `pnpm typecheck`。该文件由插件维护，已从 ESLint 和 Prettier 排除。
 
@@ -76,15 +76,11 @@ Vite 插件在开发和构建时生成 `src/routeTree.gen.ts`。提交路由变�
 
 ## HTTP 请求
 
-从 `@/utils/http` 导入 `http`、`uploadFile` 和 `downloadFile`。请求路径使用 `/users` 这类 API 相对路径。四个 mode 均默认使用 `VITE_API_BASE_URL=/api`，开发时使用现有 Vite 代理。部署时可在构建环境注入 API 地址，沿用默认值时由部署环境提供同源 `/api`。
+四个 Vite mode 均预留 `VITE_API_BASE_URL=/api`。当前运行时代码尚未读取该变量。开发代理匹配同源 `/api` 请求，移除前缀后转发至 `http://127.0.0.1:9999`。
 
-`http.get<T>`、`http.post<T>` 和 `http.request<T>` 默认从 `{ data, code?, message? }` 提取 `data`，可用 `configureResponse` 设置字段和成功码，或用 `setResponseParser` 更换默认解析器。单个请求可以给 `http.request` 传自定义解析函数。空响应和需要读取状态或响应头的请求使用 `http.requestRaw<T>`。业务失败抛 `ApiError`，响应格式错误抛 `ApiResponseError`，传输和取消错误保留 Axios 类型。
+接入业务 API 时，在所属功能目录通过普通服务函数调用 Axios，由 TanStack Query 管理服务端缓存。将影响结果的参数放进 queryKey，把 Query 提供的取消信号传给请求，写操作使用 Mutation 并精准失效相关缓存。认证、响应格式和错误处理以实际接口契约为准。
 
-Query 提供的 `signal` 由普通服务函数传给 HTTP 请求。Mutation 在 `mutationFn` 中使用 `getMutationSessionSignal(context)` 获取发起会话的信号，在异步准备前获取并传给后续 HTTP 请求。Query 和 Mutation 管理的 HTTP 请求使用 `skipDedupe: true` 和 `silent: true`，由 QueryClient 管理同键请求并在重试结束后提示失败。会话切换时会更换 QueryClient，旧客户端启动的查询和 Mutation 在执行请求函数前会被取消。需要自行展示错误时可设置 `meta: { silent: true }`。React 树外可从 `@/utils/http` 调用 `notifyHttpError`、`notifyHttpWarning` 和 `notifyHttpSuccess`。
-
-无调用方 signal 的独立读请求在路径切换时取消，独立写请求可通过 `routeScoped: true` 加入。使用 `skipRouteCancel: true` 保留跨页面请求。等价的进行中请求默认取消前一次，写操作的重复提交还需通过表单提交状态控制。
-
-登录和刷新分别使用 `POST /auth/login` 和 `POST /auth/refresh`，响应的 `data` 包含 `accessToken` 和 `refreshToken`。登录请求发送 `username` 和 `password`，刷新发送 `refreshToken`。应用会为 API 请求注入 Bearer token，公开接口可设置 `skipAuth: true`。刷新后的读请求最多重放一次，写操作仅在调用方设置 `replayOnUnauthorized: true` 时重放。刷新凭据缺失或被明确拒绝时结束会话，临时故障和响应格式错误保留会话。[HTTP 请求层设计与验收](./docs/http-layer-design.md)
+原有 `@/utils/http`、会话刷新和共享 QueryClient 已从当前分支移除。此前的接口和实现设计保存在[历史 HTTP 请求层设计](./docs/http-layer-design.md)中。
 
 ## Skill、MCP 与插件使用
 
@@ -144,13 +140,17 @@ pnpm build         # 类型检查和生产构建
 
 首次安装依赖后，`prepare` 自动安装 Husky hooks。已有依赖的工作区可运行 `pnpm prepare`。CI 如不需要 hooks，可设置 `HUSKY=0`。
 
+## JavaScript 规范
+
+- 新增和修改的 JavaScript 必须使用 ES6+（ES2015 及后续版本）规范，TypeScript 中的 JavaScript 语法遵循同一约定。默认用 `const`，需要重新赋值时用 `let`，禁止使用 `var`。适合时使用解构、展开和模板字符串，异步流程优先采用 `async` / `await`。
+- 项目自有 JavaScript 和 TypeScript 的源码、测试和工具配置统一使用 ESM（`import` / `export`）。ESLint 拒绝 CommonJS 的 `require`、`module`、`exports`、`__dirname`、`__filename` 和 TypeScript 的 `export =`。
+- 组件、Hook、工具函数和回调优先使用箭头函数。依赖动态 `this`、函数声明提升或生成器语法时，使用相应的普通函数写法。
+
 ## 格式与代码检查
 
 - Prettier 负责两空格缩进、单引号、分号、100 列目标宽度、尾逗号和 LF 换行；JSX 属性使用双引号。`package.json` 使用已有插件排序。
 - ESLint 覆盖 JS、JSX、TS、TSX，同时包含 MJS、CJS、MTS、CTS；JSX 写在 `.jsx` 或 `.tsx` 中。
-- 项目自有 JavaScript 和 TypeScript 采用 ES2015+ 写法，应用、测试和工具配置统一使用 ESM（`import` / `export`）。ESLint 拒绝 CommonJS 的 `require`、`module`、`exports`、`__dirname`、`__filename` 和 TypeScript 的 `export =`。
-- 组件、Hook、工具函数和回调优先使用箭头函数。依赖动态 `this`、函数声明提升或生成器语法时，使用相应的普通函数写法。
-- JS 遵守推荐规则及严格比较、使用 const/let、禁止 eval、禁止 debugger、回调必须正确返回等检查。`console.log` 产生警告，允许 `console.warn/error`；Node 配置和脚本不限制 console。
+- JS 遵守推荐规则及严格比较、禁止 eval、禁止 debugger、回调必须正确返回等检查。`console.log` 产生警告，允许 `console.warn/error`；Node 配置和脚本不限制 console。
 - TS 使用 typescript-eslint 推荐规则，并检查 `any`、非空断言、未使用变量、重载分组、类型导入和统一签名。刻意不用的参数和捕获异常参数可使用 `_` 前缀。
 - 未使用的变量、函数、导入、类型声明和参数由 ESLint 报告为 warning；提交检查及 `pnpm lint` 使用 `--max-warnings=0`，因此会阻止通过。TypeScript 的 `noUnusedLocals/noUnusedParameters` 显式关闭，避免编辑器重复报错；其他严格类型检查不变。
 - React 使用推荐规则和自动 JSX runtime，检查列表 key、组件命名、嵌套组件、按钮类型及无障碍问题。不强制 React 19 已移除运行时检查的 `propTypes`。
@@ -163,7 +163,7 @@ pnpm build         # 类型检查和生产构建
 - React 额外检查不安全的旧类组件生命周期和 iframe sandbox；Hooks 以已安装版本的推荐预设为准，不开启已废弃的规则。未来自定义 effect Hook 需精确登记依赖检查范围。
 - JS 额外检查构造函数错误返回、未更新的循环条件、可选链参与算术运算；TS 类型感知检查还拒绝误展开 Promise / Map 等值及意外的 `[object Object]` 字符串转换。
 - Prettier 冲突规则在 ESLint 配置末尾关闭；格式检查使用独立命令。
-- 忽略范围以各检查工具配置为准，通常包括依赖、覆盖率、测试报告、Husky 内部文件、`src/generated` 和路由生成文件；Prettier 还忽略锁文件。当前构建输出已改为 `workbase/`，但 ESLint 与 Prettier 的构建目录忽略项仍需同步；已有产物会导致全量检查误扫。不能假定 `.gitignore` 会自动作用于所有检查工具。
+- ESLint、Stylelint、Markdownlint 和 Prettier 均已配置忽略 `workbase/`。其他忽略范围以各工具配置为准，通常包括依赖、覆盖率和测试报告。路由生成文件由 ESLint 和 Prettier 跳过，锁文件由 Prettier 跳过。
 
 ## 导入顺序
 
@@ -180,7 +180,7 @@ pnpm build         # 类型检查和生产构建
 
 类型使用 `import type`；具名导入和可排序的重导出也会排序。不要叠加另一个 import 排序插件。
 
-跨目录引用可使用 `@/`，例如 `import App from '@/App';`；同目录引用仍可使用 `./`。测试继承应用的 TypeScript 路径配置，Vitest 通过现有 Vite 配置解析到同一目录。样式副作用导入即使使用别名，也放在最后。
+跨目录引用可使用 `@/`，例如 `import { router } from '@/router';`。同目录引用使用 `./`。Vitest 复用 Vite 路径解析配置。样式副作用导入即使使用别名，也放在最后。
 
 应用和测试中的 JS、JSX、TS、TSX 模块导入可省略文件后缀，例如 `@/App` 或 `./utils`。Vite 原生解析和 TypeScript `bundler` 模式已支持，无需额外插件；VS Code 的 `js/ts.preferences.importModuleSpecifierEnding` 设置为 `minimal`，自动导入优先省略后缀和末尾的 `/index`。CSS、Less、SCSS、图片及带 `?raw`、`?url` 等查询参数的资源引用保留完整文件名；直接由 Node 执行的 ESM 配置和脚本按 Node 的要求保留后缀。
 
@@ -204,7 +204,7 @@ fix(auth): 修复登录状态失效
 chore: 配置前端代码规范
 ```
 
-本地 hooks 与 CI 使用同一套规范。hooks 可被绕过，CI 会重新执行全量检查。
+本地 hooks 检查暂存文件和提交信息。提交前按验证要求运行全量检查。
 
 ## 样式规范
 
@@ -231,7 +231,7 @@ chore: 配置前端代码规范
 ## 类型、目录和环境
 
 - 应用与构建配置均显式开启 `strict`、`noUncheckedIndexedAccess` 和 `noImplicitOverride`。对数组索引和字典取值处理可能的 undefined。
-- 额外开启 `exactOptionalPropertyTypes`、`noImplicitReturns` 和 `noPropertyAccessFromIndexSignature`，测试配置继承应用配置。可选属性默认允许缺失，不等于允许显式传入 undefined；需要后者时在类型中明确声明。返回值函数需完整处理返回路径；仅由索引签名提供的字段使用方括号访问，已声明字段仍可用点访问。
+- 应用与构建配置额外开启 `exactOptionalPropertyTypes`、`noImplicitReturns` 和 `noPropertyAccessFromIndexSignature`。可选属性默认允许缺失，不等于允许显式传入 undefined；需要后者时在类型中明确声明。返回值函数需完整处理返回路径；仅由索引签名提供的字段使用方括号访问，已声明字段仍可用点访问。
 - React 组件使用 PascalCase，Hook 使用 `use` 前缀，普通函数和变量使用 camelCase。一个文件聚焦一项职责，相关逻辑放在所属功能附近。
 - 共享代码只在确有复用时提取；服务端状态、客户端共享状态、组件局部状态分开管理。
 - Node.js 固定参考 `.nvmrc`，pnpm 固定参考 `packageManager`。偏好最新版时应显式升级、更新锁文件并重新验证；CI 使用冻结锁文件安装。
@@ -254,18 +254,16 @@ pnpm lint:md:fix     # 修复可自动处理的文档问题
 
 暂存区任务按扩展名分组，避免并发修改同一文件：代码先 ESLint 后 Prettier；样式先 Stylelint 后 Prettier；Markdown 先 Prettier 后 Markdownlint。`pnpm check` 汇总 ESLint、Stylelint、Markdownlint、Prettier 和 TS 7 类型检查。
 
-GitHub Actions 的 `Frontend quality` 工作流在 PR、main 分支推送和手动运行时执行冻结安装、完整检查、Vitest 测试和构建。PR 校验 base 到 head 的提交，push 校验本次推送的提交；新建分支只校验最新提交，避免将历史遗留信息当成本次错误。CI 中关闭 Husky，并直接运行检查命令。
+当前分支未包含 GitHub Actions 工作流。提交前运行 `pnpm check` 和 `pnpm test`，涉及依赖、构建或运行时代码时再运行 `pnpm build`，记录实际结果。
 
 ## 测试与代码清理
 
-- 所有测试统一使用 Vitest。`vite.config.ts` 定义 `lint` 和 `unit` 两个测试项目：前者在 Node 环境运行规范回归，后者在 jsdom 环境运行组件与单元测试；共用现有 Vite 插件和路径解析配置。
-- 组件测试放在 `tests/unit`，推荐 `.test.tsx`，工具函数测试推荐 `.test.ts`；`unit` 项目识别 `.test`、`.spec` 命名及 JS/JSX/TS/TSX 扩展名。测试 API 和类型从 `vitest` 显式导入，测试的 TypeScript 配置放在 `tests/tsconfig.json`，不向应用注入测试全局类型。
-- `tests/setup.ts` 加载 `@testing-library/jest-dom/vitest`，并通过 `afterEach(cleanup)` 清理组件测试的 DOM；样式和资源导入交给 Vite 处理。
+- 所有测试统一使用 Vitest。`vite.config.ts` 保留两个项目，`lint` 在 Node 环境查找 `tests/lint-config.test.mjs`，`unit` 在 jsdom 环境查找 `tests/unit` 下的组件与单元测试。当前分支没有 `tests/`，`pnpm test` 返回 `No test files found`。
+- 组件测试使用 `.test.tsx`，工具函数测试使用 `.test.ts`。`unit` 项目也识别 `.spec` 和 JS/JSX 扩展名。测试 API 和类型从 `vitest` 显式导入。新增 TypeScript 测试时先建立 `tests/tsconfig.json`，继承应用类型配置，再将其加入根 TypeScript 项目引用。
+- 启用组件测试时，补齐 `unit` 项目指定的 `tests/setup.ts`，加载 `@testing-library/jest-dom/vitest` 并通过 `afterEach(cleanup)` 清理 DOM。样式和资源导入交给 Vite 处理。
 - 通过 `screen.getByRole` 等语义查询和 `userEvent` 测试用户行为；等待异步事件和查询，不依赖组件内部状态、CSS 选择器或直接 DOM 遍历。
-- `pnpm test` 一次运行全部测试项目；`pnpm test:lint` 仅运行规范回归；`pnpm test:watch` 监听全部测试；`pnpm test:ui` 打开 Vitest UI。`pnpm test:coverage` 仅运行 `unit` 项目并输出 V8 覆盖率，暂不设置任意覆盖率阈值。`pnpm check` 不包含测试，CI 单独执行 `pnpm test`。
-- Testing Library 7.16.2 的两个 waitFor 规则有自动修复缺陷；`config/eslint-testing-library.js` 保留错误诊断，仅移除这两个规则的自动修复。`lint` 项目通过正反例验证兼容处理、Vitest 和其他规范规则；升级插件时需重新验证后移除兼容层。
-- E2E 优先覆盖登录、权限和关键提交流程；用 Playwright 的可访问性定位器和自动等待，不用固定 sleep。现阶段未接入 E2E 配置或 CI 浏览器测试。
+- `pnpm test` 运行全部 Vitest 项目，`pnpm test:lint` 只运行规范回归，`pnpm test:watch` 监听测试，`pnpm test:ui` 打开 Vitest UI，`pnpm test:coverage` 为 `unit` 项目生成覆盖率。`pnpm check` 与 Vitest 是独立命令。
+- Testing Library ESLint 插件的两个 waitFor 规则有自动修复缺陷。`config/eslint-testing-library.js` 保留诊断，并关闭这两条规则的自动修复。升级插件时应先用正反例重新验证兼容行为。
+- E2E 按需使用 Playwright，优先覆盖登录、权限和关键提交流程，使用可访问性定位器和自动等待。当前分支尚无 E2E 配置。
 - API 集成测试按需用已有 MSW 模拟成功、空数据、失败和取消；避免请求真实业务服务。当前未创建 MSW handler。
 - `pnpm lint:unused` 是独立审查命令，发现问题会以非零状态退出。项目预装了很多待使用依赖，先逐项评估，不把当前清单直接当作提交门槛。
-
-工作流提交到 GitHub 后才会运行。若需要阻止未通过检查的合并，应由仓库管理员在分支保护中将 `quality` 设为必需检查。

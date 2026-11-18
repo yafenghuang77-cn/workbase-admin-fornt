@@ -8,13 +8,14 @@
 - 保留 TS 7 构建与 TS 6 提供 ESLint 解析 API 的现有分工，不擅自合并或降级。
 - 使用 pnpm，版本见 `packageManager`；Node.js 版本见 `.nvmrc`。更新依赖时同步锁文件。
 - 功能代码放入所属功能目录；仅真正复用的组件、Hook 和工具提升到共享目录。不要为尚未实现的功能创建空架构。
-- API 调用放在普通服务函数中，服务端状态使用现有 TanStack Query；跨页面客户端状态按需使用 Zustand，局部状态留在组件附近。
+- 接入业务 API 时，在功能目录中通过普通服务函数调用 Axios，使用 TanStack Query 管理服务端状态。跨页面客户端状态按需使用 Zustand，局部状态留在组件附近。
+- 当前统一请求层、共享 QueryClient、认证和权限尚待接入。开发入口仍加载 Query Devtools，缺少 QueryClient 时会报 `No QueryClient set`。启动、测试和部署现状见 [README.md](./README.md)。
 
 ## 页面构建与复用
 
 - 构建页面优先使用 `@ant-design/pro-components` 和 `antd`：布局优先 ProLayout / PageContainer，列表优先 ProTable，编辑表格优先 EditableProTable，表单优先 ProForm / ModalForm / DrawerForm / StepsForm，详情优先 ProDescriptions；简单场景使用 antd 对应基础组件。
 - 先用 `rg` 检索项目已有实现，再查已安装组件、Hook 和工具的能力。能通过公开 API 和组合完成的功能，不重复实现搜索表格、分页、表单校验、弹窗、上传或通用布局。
-- 当前已有 QueryClient、TanStack Router 文件路由、antd 应用级上下文和独立首页。访问 `/workbase/` 打开首页，旧欢迎页地址重定向至首页。在 `src/routes` 定义路由，Vite 插件生成 `src/routeTree.gen.ts`。路由变更需同时纳入生成文件，便于独立类型检查。请求封装与业务功能按任务逐步接入，不把预装依赖或 Vite 预打包项当作已完成能力。
+- 当前已有 TanStack Router 文件路由、antd 应用级上下文、独立欢迎页、Tiptap 富文本演示和登录占位页。首页路由为 `/workbase/`，旧欢迎页地址重定向至首页。在 `src/routes` 定义路由，Vite 插件生成 `src/routeTree.gen.ts`。路由变更需同时纳入生成文件，便于独立类型检查。
 - ProForm / antd Form 与 React Hook Form 不共同管理同一表单；ProTable 自动请求与 `useQuery` 不同时请求同一数据。服务端状态由 Query 统一管理，默认通过受控数据接入表格，提交使用 Mutation 并精准失效缓存。
 - 按 CONTRIBUTING 的场景表复用已有库：HTTP 用 Axios，路由用 TanStack Router，图表优先 ECharts，通用 Hook 优先 ahooks，工具优先原生 API / es-toolkit，日期用 Day.js，文档处理按格式选已有库。
 - 对重叠库按场景选一个：虚拟列表先用组件现有能力，再评估 TanStack Virtual；Radash、其他 Hook 库、React Hook Form 等仅在已有首选能力不适合时使用。不要因已安装就全部接入。
@@ -51,8 +52,9 @@
 - 有匹配需求时优先使用已配置插件或 MCP；不匹配或不可用时使用本地工具及对应版本官方资料，并说明限制。无需为本地开发安装无关外部服务。
 - 项目不是 Umi Max，不因 ProComponents 组件名称触发而套用 Umi 路由、请求或 Model 约定。仅在技术栈实际变化后才选择对应框架 skill。
 
-## 样式与文档
+## JavaScript、样式与文档
 
+- 新增和修改的 JavaScript 使用 ES6+（ES2015 及后续版本）规范。默认用 `const`，需要重新赋值时用 `let`，禁止使用 `var`。模块使用 ESM（`import` / `export`），具体约定见 [JavaScript 规范](./CONTRIBUTING.md#javascript-规范)。
 - 项目自写样式统一使用 Less 并通过 Stylelint 检查。样式使用类选择器，ID 保留给锚点或 DOM 标识。
 - Markdown 使用仓库配置，代码块标明语言；禁止在文档或客户端代码中写入密钥。
 - 格式统一交给 Prettier，不叠加有冲突的格式化工具。
@@ -61,6 +63,7 @@
 ## 验证与交付
 
 - 提交前执行 `pnpm check` 和 `pnpm test`；影响构建、依赖或运行时代码时再执行 `pnpm build`。
+- 当前分支保留 Vitest 配置与脚本。缺少测试文件时，`pnpm test` 会报告 `No test files found`。新增 TypeScript 测试时，先建立 `tests/tsconfig.json` 再加入根项目引用。
 - 验证规则配置时使用能触发规则的反例，不能只检查配置是否成功加载。
 - 遵循 Conventional Commits；不自动提交、推送或发布用户未要求的内容。
 - 尊重工作区已有改动，报告未运行或无法完成的检查，不将本地验证说成远程 CI 已通过。
