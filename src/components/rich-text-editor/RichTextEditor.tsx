@@ -11,7 +11,7 @@ const Viewer = lazy(() =>
   import('./EditorSurface').then((module) => ({ default: module.RichTextViewerImpl })),
 );
 
-export function RichTextEditor(props: RichTextEditorProps) {
+export const RichTextEditor = (props: RichTextEditorProps) => {
   return (
     <Suspense
       fallback={
@@ -23,12 +23,12 @@ export function RichTextEditor(props: RichTextEditorProps) {
       <Editor {...props} />
     </Suspense>
   );
-}
+};
 
-export function RichTextViewer(props: RichTextViewerProps) {
+export const RichTextViewer = (props: RichTextViewerProps) => {
   return (
     <Suspense fallback={<Spin />}>
       <Viewer {...props} />
     </Suspense>
   );
-}
+};

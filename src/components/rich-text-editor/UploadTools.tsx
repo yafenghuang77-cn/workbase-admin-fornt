@@ -24,7 +24,13 @@ const TOOLS = [
   { kind: 'file', label: '上传附件', icon: <PaperClipOutlined /> },
 ] as const;
 
-export function UploadTools({ services, disabled, uploading, upload, cancel }: UploadToolsProps) {
+export const UploadTools = ({
+  services,
+  disabled,
+  uploading,
+  upload,
+  cancel,
+}: UploadToolsProps) => {
   return (
     <>
       {TOOLS.map(({ kind, label, icon }) => {
@@ -82,4 +88,4 @@ export function UploadTools({ services, disabled, uploading, upload, cancel }: U
       )}
     </>
   );
-}
+};

@@ -2,16 +2,16 @@ import { Node } from '@tiptap/core';
 
 import { isSafeUrl } from './content';
 
-function displayName(value: unknown, fallback: string): string {
+const displayName = (value: unknown, fallback: string): string => {
   return typeof value === 'string' && value.trim() ? value.trim().slice(0, 255) : fallback;
-}
+};
 
-function displaySize(value: unknown): string {
+const displaySize = (value: unknown): string => {
   if (typeof value !== 'number' || !Number.isSafeInteger(value) || value <= 0) return '';
   if (value < 1024) return `${value} B`;
   if (value < 1024 ** 2) return `${Number((value / 1024).toFixed(1))} KB`;
   return `${Number((value / 1024 ** 2).toFixed(1))} MB`;
-}
+};
 
 /** 原生 video 控件；不渲染任意 iframe、脚本或用户提供的 HTML 属性。 */
 export const Video = Node.create({

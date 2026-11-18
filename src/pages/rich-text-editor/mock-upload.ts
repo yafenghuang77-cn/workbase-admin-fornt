@@ -4,7 +4,7 @@ import type { RichTextUploadContext, UploadedFile } from '@/components/rich-text
 import { createLocalAsset } from '@/components/rich-text-editor/local-assets';
 
 /** 仅供演示页使用；真实接口可按同一上传回调协议替换。 */
-export function createMockUploads() {
+export const createMockUploads = () => {
   const assets = new Set<ReturnType<typeof createLocalAsset>>();
   let lifetime = new AbortController();
 
@@ -34,4 +34,4 @@ export function createMockUploads() {
       assets.clear();
     },
   };
-}
+};

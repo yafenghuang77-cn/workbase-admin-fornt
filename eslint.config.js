@@ -69,6 +69,14 @@ export default defineConfig([
       'no-param-reassign': ['error', { props: false }],
       'no-promise-executor-return': 'error',
       'no-proto': 'error',
+      'no-restricted-globals': [
+        'error',
+        { name: 'require', message: 'Use ESM import or import().' },
+        { name: 'module', message: 'Use ESM export.' },
+        { name: 'exports', message: 'Use ESM export.' },
+        { name: '__dirname', message: 'Use import.meta.dirname in Node.js.' },
+        { name: '__filename', message: 'Use import.meta.filename in Node.js.' },
+      ],
       'no-return-assign': ['error', 'always'],
       'no-self-compare': 'error',
       'no-sequences': 'error',
@@ -128,6 +136,10 @@ export default defineConfig([
       '@typescript-eslint/no-non-null-assertion': 'error',
       '@typescript-eslint/prefer-as-const': 'error',
       '@typescript-eslint/unified-signatures': 'error',
+      'no-restricted-syntax': [
+        'error',
+        { selector: 'TSExportAssignment', message: 'Use ESM export instead of export =.' },
+      ],
     },
   },
   {
@@ -226,13 +238,8 @@ export default defineConfig([
       'scripts/**/*.{js,mjs,cjs,ts,mts,cts}',
       'tests/lint-config.test.mjs',
     ],
-    languageOptions: { globals: globals.node },
+    languageOptions: { globals: globals.nodeBuiltin },
     rules: { 'no-console': 'off' },
-  },
-  {
-    name: 'project/commonjs',
-    files: ['**/*.{cjs,cts}'],
-    languageOptions: { sourceType: 'commonjs', globals: globals.node },
   },
   {
     name: 'project/vitest',

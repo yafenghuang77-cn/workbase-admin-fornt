@@ -36,14 +36,14 @@ interface ToolbarProps {
   cancelUpload: () => void;
 }
 
-export function Toolbar({
+export const Toolbar = ({
   editor,
   disabled,
   services,
   uploading,
   upload,
   cancelUpload,
-}: ToolbarProps) {
+}: ToolbarProps) => {
   const { token } = theme.useToken();
   const [link, setLink] = useState<LinkSelection | null>(null);
   const state = useEditorState({
@@ -274,4 +274,4 @@ export function Toolbar({
       {link && <LinkDialog editor={editor} selection={link} onClose={() => setLink(null)} />}
     </>
   );
-}
+};

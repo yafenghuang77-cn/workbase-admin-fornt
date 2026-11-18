@@ -13,14 +13,14 @@ interface AttributeOptions {
   status: string | undefined;
 }
 
-export function getEditorAttributes({
+export const getEditorAttributes = ({
   props,
   mode,
   fieldId,
   editable,
   error,
   status,
-}: AttributeOptions): Record<string, string> {
+}: AttributeOptions): Record<string, string> => {
   const attributes: Record<string, string> = {
     id: fieldId,
     class: 'rich-text-editor__content',
@@ -46,13 +46,13 @@ export function getEditorAttributes({
     });
   }
   return attributes;
-}
+};
 
-export function getSurfaceStyle(
+export const getSurfaceStyle = (
   token: GlobalToken,
   status: string | undefined,
   style: CSSProperties | undefined,
-): CSSProperties {
+): CSSProperties => {
   const variables: CSSProperties & Record<`--rich-${string}`, string> = {
     '--rich-border':
       status === 'error'
@@ -73,4 +73,4 @@ export function getSurfaceStyle(
     ...style,
   };
   return variables;
-}
+};

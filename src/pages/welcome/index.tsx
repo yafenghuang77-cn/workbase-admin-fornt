@@ -24,7 +24,7 @@ const resources = [
   },
 ];
 
-export default function WelcomePage() {
+const WelcomePage = () => {
   return (
     <main className="welcome-page">
       <div className="welcome-intro">
@@ -62,4 +62,6 @@ export default function WelcomePage() {
       </div>
     </main>
   );
-}
+};
+
+export default WelcomePage;

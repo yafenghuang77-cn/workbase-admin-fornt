@@ -25,10 +25,10 @@ const FONT_FAMILIES = [
 export const LINE_HEIGHTS = ['1', '1.5', '1.75', '2', '2.5'];
 
 /** 仅本地预览注册的媒体可使用 blob；拒绝任意外部 blob / data / javascript 地址。 */
-export function isSafeUrl(
+export const isSafeUrl = (
   value: unknown,
   kind: 'image' | 'video' | 'file' | 'link',
-): value is string {
+): value is string => {
   if (typeof value !== 'string' || !value || /[\s\p{Cc}\\]/u.test(value)) {
     return false;
   }
@@ -45,9 +45,9 @@ export function isSafeUrl(
   } catch {
     return false;
   }
-}
+};
 
-function safeAttributes(attrs: Record<string, unknown>): Record<string, unknown> {
+const safeAttributes = (attrs: Record<string, unknown>): Record<string, unknown> => {
   const result = { ...attrs };
   for (const name of ['color', 'backgroundColor']) {
     const color = result[name];
@@ -67,10 +67,10 @@ function safeAttributes(attrs: Record<string, unknown>): Record<string, unknown>
     result['rel'] = 'noopener noreferrer nofollow';
   }
   return result;
-}
+};
 
 /** 编辑器回显和粘贴共用同一 URL / 样式边界；不解析或直接渲染原始 HTML。 */
-export function sanitizeContent(node: JSONContent): JSONContent {
+export const sanitizeContent = (node: JSONContent): JSONContent => {
   const attrs: Record<string, unknown> = node.attrs ?? {};
   if (node.type === 'image' && !isSafeUrl(attrs['src'], 'image')) {
     throw new Error('文档包含不支持的图片地址');
@@ -108,13 +108,13 @@ export function sanitizeContent(node: JSONContent): JSONContent {
         }
       : {}),
   };
-}
+};
 
 /** 供 Form.Item 自定义必填校验使用，媒体、附件、表格和分隔线也算有效内容。 */
-export function isRichTextEmpty(value: RichTextValue | undefined): boolean {
+export const isRichTextEmpty = (value: RichTextValue | undefined): boolean => {
   if (!value) return true;
   if (value.text?.trim()) return false;
   if (['image', 'video', 'attachment', 'table', 'horizontalRule'].includes(value.type ?? ''))
     return false;
   return value.content?.every(isRichTextEmpty) ?? true;
-}
+};

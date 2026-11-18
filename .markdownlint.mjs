@@ -1,9 +1,9 @@
-const ali = require('markdownlint-config-ali');
+import ali from 'markdownlint-config-ali' with { type: 'json' };
 
 // Replace the old MD024 alias with the current rule name.
 const { 'no-duplicate-header': duplicateHeading, ...rules } = ali;
 
-module.exports = {
+export default {
   ...rules,
   MD024: duplicateHeading,
   // Prettier owns wrapping; long links and Chinese paragraphs need not be split.

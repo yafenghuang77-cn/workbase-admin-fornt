@@ -20,7 +20,7 @@ interface UploadState {
 
 const IDLE: UploadState = { kind: null, progress: null, error: '' };
 
-export function useAssetUpload(editor: Editor | null, services: UploadServices) {
+export const useAssetUpload = (editor: Editor | null, services: UploadServices) => {
   const active = useRef<AbortController | null>(null);
   const [state, setState] = useState<UploadState>(IDLE);
   const cancel = useCallback(() => {
@@ -90,4 +90,4 @@ export function useAssetUpload(editor: Editor | null, services: UploadServices) 
   }, [editor, upload]);
 
   return { upload, cancel, ...state };
-}
+};

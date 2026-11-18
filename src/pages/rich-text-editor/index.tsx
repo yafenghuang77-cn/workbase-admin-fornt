@@ -48,7 +48,7 @@ const initialContent: RichTextValue = {
   ],
 };
 
-function DemoLayout({ children }: { children: ReactNode }) {
+const DemoLayout = ({ children }: { children: ReactNode }) => {
   const { token } = theme.useToken();
   return (
     <main
@@ -58,9 +58,9 @@ function DemoLayout({ children }: { children: ReactNode }) {
       {children}
     </main>
   );
-}
+};
 
-export function RichTextEditorPage() {
+export const RichTextEditorPage = () => {
   const [form] = Form.useForm<ArticleValues>();
   const body = Form.useWatch<RichTextValue>('body', form);
   const [dark, setDark] = useState(false);
@@ -152,4 +152,4 @@ export function RichTextEditorPage() {
       </DemoLayout>
     </ConfigProvider>
   );
-}
+};

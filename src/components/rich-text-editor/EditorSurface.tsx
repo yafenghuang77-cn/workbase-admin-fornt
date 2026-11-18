@@ -23,7 +23,7 @@ interface EditorSurfaceProps extends RichTextEditorProps {
   status?: string | undefined;
 }
 
-function EditorSurface(props: EditorSurfaceProps) {
+const EditorSurface = (props: EditorSurfaceProps) => {
   const {
     mode,
     value,
@@ -148,9 +148,9 @@ function EditorSurface(props: EditorSurfaceProps) {
       )}
     </div>
   );
-}
+};
 
-export function RichTextEditorImpl(props: RichTextEditorProps) {
+export const RichTextEditorImpl = (props: RichTextEditorProps) => {
   const { componentDisabled } = ConfigProvider.useConfig();
   const { status } = Form.Item.useStatus();
   return (
@@ -161,8 +161,8 @@ export function RichTextEditorImpl(props: RichTextEditorProps) {
       status={status}
     />
   );
-}
+};
 
-export function RichTextViewerImpl(props: RichTextViewerProps) {
+export const RichTextViewerImpl = (props: RichTextViewerProps) => {
   return <EditorSurface {...props} mode="read" />;
-}
+};

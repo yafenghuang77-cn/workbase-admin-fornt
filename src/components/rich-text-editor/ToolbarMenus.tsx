@@ -25,7 +25,7 @@ interface IconMenuProps {
   selectedKeys?: string[];
 }
 
-function IconMenu({ label, icon, disabled, items, selectedKeys = [] }: IconMenuProps) {
+const IconMenu = ({ label, icon, disabled, items, selectedKeys = [] }: IconMenuProps) => {
   return (
     <Dropdown
       disabled={disabled}
@@ -46,7 +46,7 @@ function IconMenu({ label, icon, disabled, items, selectedKeys = [] }: IconMenuP
       </Tooltip>
     </Dropdown>
   );
-}
+};
 
 interface EditorMenuProps {
   editor: Editor;
@@ -54,7 +54,7 @@ interface EditorMenuProps {
 }
 
 /** 每种排版能力在工具栏上各有一个图标，点击只展开该工具的选项。 */
-export function TextStyleMenus({ editor, disabled }: EditorMenuProps) {
+export const TextStyleMenus = ({ editor, disabled }: EditorMenuProps) => {
   const state = useEditorState({
     editor,
     selector: ({ editor: current }) => ({
@@ -153,9 +153,9 @@ export function TextStyleMenus({ editor, disabled }: EditorMenuProps) {
       />
     </>
   );
-}
+};
 
-export function TableMenu({ editor, disabled }: EditorMenuProps) {
+export const TableMenu = ({ editor, disabled }: EditorMenuProps) => {
   const state = useEditorState({
     editor,
     selector: ({ editor: current }) => ({
@@ -227,4 +227,4 @@ export function TableMenu({ editor, disabled }: EditorMenuProps) {
       ]}
     />
   );
-}
+};

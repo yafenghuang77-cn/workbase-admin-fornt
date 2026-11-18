@@ -17,7 +17,7 @@ interface LinkDialogProps {
   onClose: () => void;
 }
 
-export function LinkDialog({ editor, selection, onClose }: LinkDialogProps) {
+export const LinkDialog = ({ editor, selection, onClose }: LinkDialogProps) => {
   const [form] = Form.useForm<{ href: string }>();
   const submit = ({ href }: { href: string }) => {
     // 弹窗期间文档被外部替换时，旧选区作废。
@@ -66,4 +66,4 @@ export function LinkDialog({ editor, selection, onClose }: LinkDialogProps) {
       </Form>
     </Modal>
   );
-}
+};

@@ -13,13 +13,13 @@ interface DocumentSyncOptions {
 }
 
 /** 将 React 的字段配置和外部快照同步到命令式编辑器，保留普通输入的撤销历史。 */
-export function useEditorDocumentSync({
+export const useEditorDocumentSync = ({
   editor,
   document,
   editable,
   attributes,
   cancelUpload,
-}: DocumentSyncOptions) {
+}: DocumentSyncOptions) => {
   useEffect(() => {
     if (!editor) return;
     editor.setOptions({ editorProps: { ...editor.options.editorProps, attributes } });
@@ -39,4 +39,4 @@ export function useEditorDocumentSync({
     );
     editor.commands.setMeta('externalContent', true);
   }, [editor, document, cancelUpload]);
-}
+};

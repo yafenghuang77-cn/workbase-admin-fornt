@@ -15,14 +15,14 @@ interface EditorFooterProps {
 }
 
 /** 单独订阅计数，输入时不让整个编辑器外壳重新渲染。 */
-export function EditorFooter({
+export const EditorFooter = ({
   editor,
   fieldId,
   limit,
   uploading,
   progress,
   canUpload,
-}: EditorFooterProps) {
+}: EditorFooterProps) => {
   const count =
     useEditorState({
       editor,
@@ -46,4 +46,4 @@ export function EditorFooter({
       </span>
     </div>
   );
-}
+};

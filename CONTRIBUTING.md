@@ -148,6 +148,8 @@ pnpm build         # 类型检查和生产构建
 
 - Prettier 负责两空格缩进、单引号、分号、100 列目标宽度、尾逗号和 LF 换行；JSX 属性使用双引号。`package.json` 使用已有插件排序。
 - ESLint 覆盖 JS、JSX、TS、TSX，同时包含 MJS、CJS、MTS、CTS；JSX 写在 `.jsx` 或 `.tsx` 中。
+- 项目自有 JavaScript 和 TypeScript 采用 ES2015+ 写法，应用、测试和工具配置统一使用 ESM（`import` / `export`）。ESLint 拒绝 CommonJS 的 `require`、`module`、`exports`、`__dirname`、`__filename` 和 TypeScript 的 `export =`。
+- 组件、Hook、工具函数和回调优先使用箭头函数。依赖动态 `this`、函数声明提升或生成器语法时，使用相应的普通函数写法。
 - JS 遵守推荐规则及严格比较、使用 const/let、禁止 eval、禁止 debugger、回调必须正确返回等检查。`console.log` 产生警告，允许 `console.warn/error`；Node 配置和脚本不限制 console。
 - TS 使用 typescript-eslint 推荐规则，并检查 `any`、非空断言、未使用变量、重载分组、类型导入和统一签名。刻意不用的参数和捕获异常参数可使用 `_` 前缀。
 - 未使用的变量、函数、导入、类型声明和参数由 ESLint 报告为 warning；提交检查及 `pnpm lint` 使用 `--max-warnings=0`，因此会阻止通过。TypeScript 的 `noUnusedLocals/noUnusedParameters` 显式关闭，避免编辑器重复报错；其他严格类型检查不变。
@@ -219,7 +221,7 @@ chore: 配置前端代码规范
 
 ## Markdown 规范
 
-`.markdownlint.cjs` 复用阿里规则，适配当前 CLI 使用的引擎；`.markdownlint-cli2.jsonc` 统一排除依赖和生成产物。
+`.markdownlint.mjs` 复用阿里规则，适配当前 CLI 使用的引擎；`.markdownlint-cli2.jsonc` 统一排除依赖和生成产物。
 
 - 标题层级连续，列表使用短横线，代码块声明语言。
 - 使用规范技术名词拼写，如 JavaScript、TypeScript、React。

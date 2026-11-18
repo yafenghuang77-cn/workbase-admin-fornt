@@ -24,7 +24,7 @@ export const VIDEO_ACCEPT = 'video/mp4,video/webm,video/ogg';
 const DEFAULT_MAX_SIZE = { image: 5 * 1024 ** 2, video: 100 * 1024 ** 2, file: 20 * 1024 ** 2 };
 
 /** 绑定命令式编辑器的文件事件，仅在仍持有处理器时恢复原配置。 */
-export function bindUploadEvents(editor: Editor, upload: (files: File[]) => Promise<void>) {
+export const bindUploadEvents = (editor: Editor, upload: (files: File[]) => Promise<void>) => {
   const previous = editor.options.editorProps;
   const handlePaste: NonNullable<EditorProps['handlePaste']> = (_view, event) => {
     const files = event.clipboardData?.files;
@@ -55,22 +55,22 @@ export function bindUploadEvents(editor: Editor, upload: (files: File[]) => Prom
     }
     editor.setOptions({ editorProps: next });
   };
-}
+};
 
-export function inferUploadKind(file: File | undefined): RichTextUploadKind {
+export const inferUploadKind = (file: File | undefined): RichTextUploadKind => {
   if (file?.type.startsWith('image/')) return 'image';
   if (file?.type.startsWith('video/')) return 'video';
   return 'file';
-}
+};
 
-export function getUploadAccept(kind: RichTextUploadKind, services: UploadServices) {
+export const getUploadAccept = (kind: RichTextUploadKind, services: UploadServices) => {
   if (kind === 'image') return IMAGE_ACCEPT;
   if (kind === 'video') return VIDEO_ACCEPT;
   return services.file?.accept;
-}
+};
 
 /** accept 同时约束选择、粘贴及拖入；这里只做交互校验，文件内容仍由后端验证。 */
-function matchesAccept(file: File, accept: string): boolean {
+const matchesAccept = (file: File, accept: string): boolean => {
   return accept.split(',').some((entry) => {
     const rule = entry.trim().toLowerCase();
     if (!rule) return false;
@@ -79,13 +79,13 @@ function matchesAccept(file: File, accept: string): boolean {
     const type = file.type.toLowerCase();
     return rule.endsWith('/*') ? type.startsWith(rule.slice(0, -1)) : type === rule;
   });
-}
+};
 
-export function validateUpload(
+export const validateUpload = (
   files: File[],
   kind: RichTextUploadKind,
   services: UploadServices,
-): string {
+): string => {
   const label = UPLOAD_LABELS[kind];
   const options = services[kind];
   if (!options) return `尚未配置${label}上传服务`;
@@ -98,16 +98,16 @@ export function validateUpload(
   if (!file.size || file.size > maxSize)
     return `${label}不能为空，且不能超过 ${Number((maxSize / 1024 ** 2).toFixed(2))} MiB`;
   return '';
-}
+};
 
 /** 将上传期间的编辑事务映射到原选区，取消和任何退出路径均清理监听器。 */
-export async function insertUploadedAsset(
+export const insertUploadedAsset = async (
   editor: Editor,
   file: File,
   kind: RichTextUploadKind,
   services: UploadServices,
   context: RichTextUploadContext,
-): Promise<void> {
+): Promise<void> => {
   const options = services[kind];
   if (!options) throw new Error(`尚未配置${UPLOAD_LABELS[kind]}上传服务`);
   const { signal } = context;
@@ -165,4 +165,4 @@ export async function insertUploadedAsset(
     stop();
     signal.removeEventListener('abort', stop);
   }
-}
+};

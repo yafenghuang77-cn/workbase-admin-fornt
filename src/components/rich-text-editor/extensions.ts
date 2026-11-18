@@ -57,7 +57,7 @@ const safePaste = Extension.create({
   },
 });
 
-export function createExtensions(placeholder = '', maxLength?: number) {
+export const createExtensions = (placeholder = '', maxLength?: number) => {
   return [
     StarterKit.configure({
       heading: { levels: [1, 2, 3] },
@@ -81,7 +81,7 @@ export function createExtensions(placeholder = '', maxLength?: number) {
     }),
     safePaste,
   ];
-}
+};
 
 // 只在组件被按需加载后创建；编辑与只读展示使用同一 Schema。
 export const richTextSchema = getSchema(createExtensions());
