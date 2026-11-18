@@ -31,7 +31,7 @@ export default defineConfig(({ command, mode, isPreview }) => {
       compression({
         algorithms: ['gzip'], // 开启 Gzip 压缩
         threshold: 10240, // 仅对超过 10KB 的文件进行压缩
-        deleteOriginalAssets: false, // 保留原始文件，以兼容不支持 Gzip 的环境
+        deleteOriginalAssets: true, // 保留原始文件，以兼容不支持 Gzip 的环境
       }),
       tanstackRouter({ target: 'react', semicolons: true }),
       react(),
@@ -94,9 +94,9 @@ export default defineConfig(({ command, mode, isPreview }) => {
       chunkSizeWarningLimit: 500,
       rolldownOptions: {
         output: {
-          entryFileNames: 'assets/js/[name]-[hash].js',
-          chunkFileNames: 'assets/js/[name]-[hash].js',
-          assetFileNames: 'assets/[ext]/[name]-[hash][extname]',
+          entryFileNames: 'js/[name]-[hash].js',
+          chunkFileNames: 'js/[name]-[hash].js',
+          assetFileNames: '[ext]/[name]-[hash][extname]',
           codeSplitting: {
             // entriesAware 保留静态 / 动态入口边界；业务端仍需 import() 或 React.lazy。
             // 仅手动拆分 React 和 Ant Design，其余依赖由 Rolldown 自动分包。
