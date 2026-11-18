@@ -38,6 +38,39 @@ test('上传完成后将服务端地址和文件信息写入附件节点', async
   }
 });
 
+test('上传期间编辑文档和移动光标，附件仍替换原选区', async () => {
+  const editor = new Editor({
+    extensions: createExtensions(),
+    content: '<p>前文</p><p>待替换</p><p>后文</p>',
+  });
+  const upload = vi.fn().mockResolvedValue({ url: '/files/guide.pdf' });
+  const context = { signal: new AbortController().signal, onProgress: vi.fn() };
+
+  try {
+    const from = editor.state.doc.child(0).nodeSize + 1;
+    editor.commands.setTextSelection({ from, to: from + editor.state.doc.child(1).content.size });
+    const pending = insertUploadedAsset(
+      editor,
+      new File(['guide'], 'guide.pdf'),
+      'file',
+      { file: { upload } },
+      context,
+    );
+
+    editor.commands.insertContentAt(0, '<p>新增前言</p>');
+    editor.commands.setTextSelection(editor.state.doc.content.size - 1);
+    await pending;
+
+    expect(
+      editor.state.doc.children.map((node) =>
+        node.type.name === 'paragraph' ? node.textContent : node.type.name,
+      ),
+    ).toEqual(['新增前言', '前文', 'attachment', '后文']);
+  } finally {
+    editor.destroy();
+  }
+});
+
 test('取消进行中的上传后，迟到结果不改写文档', async () => {
   const editor = new Editor({ extensions: createExtensions(), content: '<p>原文</p>' });
   const controller = new AbortController();

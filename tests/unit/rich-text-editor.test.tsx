@@ -92,3 +92,31 @@ test('点击取消上传会中止请求，迟到结果不会插入正文', async
   expect(within(editor).queryByRole('link', { name: /notice\.pdf/u })).not.toBeInTheDocument();
   expect(screen.queryByRole('button', { name: '取消上传' })).not.toBeInTheDocument();
 });
+
+test.each([
+  { scenario: '禁用编辑', disabled: true, nextText: '初稿' },
+  { scenario: '外部回填正文', disabled: false, nextText: '回填正文' },
+])('$scenario 会取消上传，迟到结果不会插入文档', async ({ disabled, nextText }) => {
+  const upload = vi
+    .fn<FileUploadOptions['upload']>()
+    .mockResolvedValue({ url: '/files/notice.pdf' });
+  const fileUpload = { upload };
+  const { rerender } = render(<RichTextEditor value={article('初稿')} fileUpload={fileUpload} />);
+
+  const editor = await screen.findByRole('textbox');
+  pasteAttachment(editor);
+  expect(screen.getByRole('button', { name: '取消上传' })).toBeInTheDocument();
+  rerender(
+    <RichTextEditor disabled={disabled} value={article(nextText)} fileUpload={fileUpload} />,
+  );
+
+  expect(upload.mock.calls[0]?.[1].signal.aborted).toBe(true);
+  await act(async () => {
+    await upload.mock.results[0]?.value;
+  });
+
+  expect(editor).toHaveTextContent(nextText);
+  expect(editor).toHaveAttribute('aria-readonly', String(disabled));
+  expect(within(editor).queryByRole('link')).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: '取消上传' })).not.toBeInTheDocument();
+});

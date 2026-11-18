@@ -12,7 +12,7 @@
 
 - 当前定义了独立欢迎页、Tiptap 富文本演示和登录占位页。应用已接入 React Compiler、TanStack Router 文件路由及 antd 应用级主题与反馈上下文。
 - 统一 Axios 请求层、共享 QueryClient、登录认证、业务权限和监控初始化尚待接入。开发入口仍渲染 Query Devtools，缺少 QueryClient 时会报 `No QueryClient set`。
-- Tailwind、Orval、MSW 和 Playwright 等依赖按场景接入。当前已接入 Vitest 规范回归与组件、单元测试，尚无 GitHub Actions 工作流。
+- Tailwind、Orval 和 MSW 等依赖按场景接入。当前已接入 Vitest 规范回归、组件和单元测试，以及 Playwright 浏览器测试。
 - Vite 使用 `/workbase/` 基础路径，开发端口为 `8888`，API 代理目标为 `http://127.0.0.1:9999`，构建目录为 `workbase/`。启动、环境和 Gzip 部署要求见 [README.md](./README.md)。
 
 `src/routes` 定义文件路由，`src/router` 维护路由实例与错误反馈，`src/pages` 放页面，`src/providers` 提供应用上下文，`src/styles` 放全局样式。页面专用组件、Hook 和样式放在所属页面附近，可复用的富文本组件位于 `src/components/rich-text-editor`。
@@ -155,7 +155,7 @@ pnpm build         # 类型检查和生产构建
 - 未使用的变量、函数、导入、类型声明和参数由 ESLint 报告为 warning；提交检查及 `pnpm lint` 使用 `--max-warnings=0`，因此会阻止通过。TypeScript 的 `noUnusedLocals/noUnusedParameters` 显式关闭，避免编辑器重复报错；其他严格类型检查不变。
 - React 使用推荐规则和自动 JSX runtime，检查列表 key、组件命名、嵌套组件、按钮类型及无障碍问题。不强制 React 19 已移除运行时检查的 `propTypes`。
 - Hooks 使用当前插件的推荐规则，包括 Hooks 调用顺序、依赖完整性和编译器相关诊断；不能通过随意关闭规则来规避设计问题。
-- `src` 和 `tests/unit` 使用浏览器环境；根目录配置、`scripts` 和规范回归测试使用 Node 环境。测试文件启用 Vitest 推荐规则，`test`、`expect` 等 API 从 `vitest` 显式导入，不注入测试全局变量。
+- `src` 和 `tests/unit` 使用浏览器环境；根目录配置、`scripts` 和规范回归测试使用 Node 环境。Vitest 文件启用 Vitest 推荐规则；`test`、`expect` 等 API 分别从 `vitest` 或 `@playwright/test` 显式导入，不注入测试全局变量。
 - `src` 中 TS 文件、`tests` 中 TS/TSX 和 `vite.config.ts` 开启类型感知检查：未处理 Promise、Promise 误用、await 非 Promise 和联合类型 switch 漏分支。`void promise()` 不能绕过检查；应等待、向上传递或处理失败。ESLint 使用 TS 6 API，构建及独立类型检查仍使用 TS 7。
 - 同一类型感知范围还检查隐式 any 的赋值、调用、成员访问、传参和返回。`JSON.parse` 等边界值先用 `unknown` 接收，再校验或收窄类型；不能只靠禁止手写 any。业务异常使用 Error 或其子类，允许原样重新抛出 catch 捕获值，并按包来源精确放行 TanStack Router 的 Redirect、NotFoundError 控制流类型。
 - TanStack Query 使用官方推荐规则，检查 queryKey 依赖、QueryClient 生命周期、不稳定依赖、无返回值查询和选项顺序；避免对查询结果做 rest 解构。
@@ -261,11 +261,11 @@ pnpm lint:md:fix     # 修复可自动处理的文档问题
 - 本地规范回归、组件和单元测试统一使用 Vitest。`vite.config.ts` 中的 `lint` 项目在 Node 环境运行 `tests/lint-config.test.mjs`；`unit` 项目在 jsdom 环境运行 `tests/unit` 下的测试。
 - 组件测试使用 `.test.tsx`，工具函数测试使用 `.test.ts`。`unit` 项目也识别 `.spec` 和 JS/JSX 扩展名。测试 API 和类型从 `vitest` 显式导入。`tests/tsconfig.json` 继承应用类型配置，并由根 TypeScript 项目引用，`pnpm typecheck` 同时检查测试代码。
 - `tests/setup.ts` 加载 `@testing-library/jest-dom/vitest`，补齐测试所需的浏览器 API，并在每个用例结束后清理 DOM。样式和资源导入交给 Vite 处理。
-- 路由测试使用真实路由树和独立的内存历史，覆盖登录和富文本页面直达。富文本用例使用真实编辑器和文档 Schema，覆盖粘贴后的实时预览、清空、重置及禁用编辑；上传交互测试只替换上传回调，验证失败重试和取消，不连接真实后端。
-- 登录表单测试覆盖前端校验、记住和取消记住账号、忘记密码与 SSO 提示，不测试尚未接入的认证接口。
+- 路由测试使用真实路由树和独立的内存历史，覆盖登录和富文本页面直达。富文本用例使用真实编辑器和文档 Schema，覆盖粘贴、实时预览、清空、重置及禁用编辑；上传测试覆盖失败重试、上传期间编辑后定位原选区、禁用或回填时取消上传，不连接真实后端。
+- 登录表单测试覆盖必填、纯空格及长度边界、记住和取消记住账号、存储不可用、提交中重复点击、忘记密码与 SSO 提示，不测试尚未接入的认证接口。
 - 通过 `screen.getByRole` 等语义查询和 `userEvent` 测试用户行为；等待异步事件和查询，不依赖组件内部状态、CSS 选择器或直接 DOM 遍历。
 - `pnpm test` 运行全部 Vitest 项目，`pnpm test:lint` 只运行规范回归，`pnpm test:watch` 监听测试，`pnpm test:ui` 打开 Vitest UI，`pnpm test:coverage` 为 `unit` 项目生成覆盖率。`pnpm check` 与 Vitest 是独立命令。
 - Testing Library ESLint 插件的两个 waitFor 规则有自动修复缺陷。`config/eslint-testing-library.js` 保留诊断，并关闭这两条规则的自动修复。升级插件时应先用正反例重新验证兼容行为。
-- E2E 按需使用 Playwright，优先覆盖登录、权限和关键提交流程，使用可访问性定位器和自动等待。当前分支尚无 E2E 配置。
+- `tests/e2e` 使用 Playwright 和 Chromium，覆盖生产部署子路径、Gzip 资源加载、懒加载失败恢复、富文本排版与撤销、链接、表格、粘贴长度限制和本地媒体上传。首次执行 `pnpm exec playwright install chromium`，之后运行 `pnpm test:e2e`。命令构建当前代码，并在 `127.0.0.1:4174` 启动仅用于本地测试的静态服务器；不使用真实业务服务。
 - API 集成测试按需用已有 MSW 模拟成功、空数据、失败和取消；避免请求真实业务服务。当前未创建 MSW handler。
 - `pnpm lint:unused` 是独立审查命令，发现问题会以非零状态退出。项目预装了很多待使用依赖，先逐项评估，不把当前清单直接当作提交门槛。

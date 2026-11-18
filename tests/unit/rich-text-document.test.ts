@@ -1,7 +1,22 @@
+import { Editor } from '@tiptap/core';
 import { describe, expect, test } from 'vitest';
 
 import { isRichTextEmpty, sanitizeContent } from '@/components/rich-text-editor/content';
 import { prepareDocument } from '@/components/rich-text-editor/document';
+import { createExtensions } from '@/components/rich-text-editor/extensions';
+
+test('粘贴按 Unicode 码点计数，恰好到上限时接受，超长时整次拒绝', () => {
+  const editor = new Editor({ extensions: createExtensions('', 3), content: '<p>起</p>' });
+  try {
+    editor.view.dispatch(editor.state.tr.insertText('甲🙂', 2).setMeta('paste', true));
+    expect(editor.getText()).toBe('起甲🙂');
+
+    editor.view.dispatch(editor.state.tr.insertText('超🙂', 2).setMeta('paste', true));
+    expect(editor.getText()).toBe('起甲🙂');
+  } finally {
+    editor.destroy();
+  }
+});
 
 describe('富文本必填校验', () => {
   test('没有内容或只有空白时视为空', () => {

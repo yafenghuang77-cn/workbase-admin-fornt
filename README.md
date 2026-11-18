@@ -23,7 +23,7 @@ pnpm dev
 | `/workbase/`                 | 独立欢迎页，提供 Ant Design、ProComponents 和 TanStack Router 的文档入口 |
 | `/workbase/welcome`          | 旧欢迎页地址，自动跳转至首页                                             |
 | `/workbase/rich-text-editor` | Tiptap 富文本演示，支持排版、链接、表格、图片、视频、附件和实时预览      |
-| `/workbase/login`            | 登录占位页，等待接入表单和认证                                           |
+| `/workbase/login`            | 登录演示表单，提供前端校验和记住账号，尚未接入真实认证                   |
 
 富文本演示使用本地模拟上传，可切换浅色和深色主题、禁用编辑、重置或清空内容。复用组件导出 `RichTextEditor` 和 `RichTextViewer`，共用 Tiptap JSON 内容格式。业务上传通过组件回调接入。[富文本组件入口](./src/components/rich-text-editor/index.ts)
 
@@ -49,6 +49,7 @@ pnpm dev
 - `pnpm test:lint`：只运行 ESLint、Stylelint 与测试规则的回归用例。
 - `pnpm test --project unit`：只测试路由、登录表单、富文本文档、编辑器及上传逻辑。
 - `pnpm test:watch`：文件变更时重跑相关测试；`pnpm test:coverage`：生成 `coverage/index.html` 等覆盖率报告。
+- 首次运行浏览器测试前执行 `pnpm exec playwright install chromium`。之后运行 `pnpm test:e2e`，构建当前代码并启动本地测试服务器，验证 `/workbase/` 下的生产资源加载、路由恢复和富文本交互，无需真实后端。
 
 ## 环境配置
 
@@ -85,7 +86,7 @@ src/
   styles/                        # 全局 Less 样式
 public/                          # 直接复制到构建目录的公共资源
 config/                          # 检查工具的兼容性配置
-tests/                           # Vitest 初始化、规范回归与组件、单元测试
+tests/                           # Vitest 规范回归、组件、单元测试及 Playwright 浏览器测试
 vite.config.ts                   # 开发、构建和 Vitest 配置
 ```
 
