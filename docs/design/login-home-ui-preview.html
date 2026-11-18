@@ -1,0 +1,1877 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>登录页与首页 UI 视觉稿</title>
+    <style>
+      :root {
+        --color-primary: #1677ff;
+        --color-primary-hover: #4096ff;
+        --color-primary-bg: #e6f4ff;
+        --color-text: rgba(0, 0, 0, 0.88);
+        --color-text-secondary: rgba(0, 0, 0, 0.65);
+        --color-text-tertiary: rgba(0, 0, 0, 0.45);
+        --color-text-quaternary: rgba(0, 0, 0, 0.25);
+        --color-border: #d9d9d9;
+        --color-split: rgba(5, 5, 5, 0.06);
+        --color-fill-secondary: rgba(0, 0, 0, 0.06);
+        --color-fill-tertiary: rgba(0, 0, 0, 0.04);
+        --color-bg-container: #ffffff;
+        --color-bg-layout: #f5f7fa;
+        --color-error: #ff4d4f;
+        --color-error-bg: #fff2f0;
+        --color-success: #52c41a;
+        --color-warning: #faad14;
+        --radius: 6px;
+        --shadow-secondary:
+          0 6px 16px 0 rgba(0, 0, 0, 0.08), 0 3px 6px -4px rgba(0, 0, 0, 0.12),
+          0 9px 28px 8px rgba(0, 0, 0, 0.05);
+        --font:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB',
+          'Microsoft YaHei', sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        padding: 32px 24px 64px;
+        background: var(--color-bg-layout);
+        font-family: var(--font);
+        color: var(--color-text);
+        font-size: 14px;
+        line-height: 1.5715;
+      }
+
+      h1.page-title {
+        max-width: 1280px;
+        margin: 0 auto 24px;
+        font-size: 20px;
+        font-weight: 600;
+      }
+
+      .stage {
+        max-width: 1280px;
+        margin: 0 auto 40px;
+      }
+
+      .stage-label {
+        margin: 0 0 4px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--color-text-secondary);
+      }
+
+      .stage-note {
+        margin: 0 0 12px;
+        font-size: 12px;
+        color: var(--color-text-tertiary);
+      }
+
+      svg {
+        display: block;
+      }
+
+      /* ================= 登录页 ================= */
+      .login-shell {
+        display: flex;
+        min-height: 640px;
+        background: var(--color-bg-container);
+        border: 1px solid var(--color-split);
+        border-radius: var(--radius);
+        overflow: hidden;
+      }
+
+      .login-brand {
+        flex: 0 0 45%;
+        position: relative;
+        padding: 48px;
+        background: linear-gradient(160deg, #0f2b5a 0%, #16407e 55%, #1668dc 100%);
+        color: #fff;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .login-brand .grid-deco {
+        position: absolute;
+        inset: 0;
+        background-image:
+          linear-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+        background-size: 48px 48px;
+      }
+
+      .brand-logo {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 18px;
+        font-weight: 600;
+      }
+
+      .brand-logo .logo-mark {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.18);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .brand-slogan {
+        position: relative;
+        margin: 48px 0 12px;
+        font-size: 28px;
+        font-weight: 600;
+        line-height: 1.4;
+      }
+
+      .brand-desc {
+        position: relative;
+        margin: 0;
+        font-size: 15px;
+        line-height: 1.8;
+        color: rgba(255, 255, 255, 0.78);
+      }
+
+      .brand-points {
+        position: relative;
+        margin: 40px 0 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .brand-points li {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 14px 0;
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.88);
+      }
+
+      .brand-points .bp-icon {
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.16);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex: none;
+      }
+
+      .brand-footer {
+        position: relative;
+        margin-top: auto;
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.55);
+      }
+
+      .login-form-col {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 48px;
+      }
+
+      .login-form {
+        width: 380px;
+      }
+
+      .login-form h2 {
+        margin: 0 0 6px;
+        font-size: 24px;
+        font-weight: 600;
+      }
+
+      .login-form .subtitle {
+        margin: 0 0 28px;
+        color: var(--color-text-secondary);
+      }
+
+      .field {
+        margin-bottom: 18px;
+      }
+
+      .field label {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 14px;
+        font-weight: 500;
+      }
+
+      .input-wrap {
+        position: relative;
+        display: flex;
+        align-items: center;
+      }
+
+      .field input {
+        width: 100%;
+        height: 40px;
+        padding: 0 36px 0 12px;
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius);
+        font-size: 15px;
+        font-family: var(--font);
+        color: var(--color-text);
+        background: var(--color-bg-container);
+        transition:
+          border-color 0.15s ease-out,
+          box-shadow 0.15s ease-out;
+      }
+
+      .field input:focus {
+        outline: none;
+        border-color: var(--color-primary);
+        box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.15);
+      }
+
+      .field input::placeholder {
+        color: var(--color-text-quaternary);
+      }
+
+      .field.error input {
+        border-color: var(--color-error);
+      }
+
+      .field.error input:focus {
+        box-shadow: 0 0 0 2px rgba(255, 77, 79, 0.15);
+      }
+
+      .input-suffix {
+        position: absolute;
+        right: 10px;
+        display: flex;
+        color: var(--color-text-tertiary);
+        cursor: pointer;
+      }
+
+      .field-hint {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        margin-top: 6px;
+        font-size: 12px;
+        color: var(--color-error);
+      }
+
+      .form-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin: 4px 0 22px;
+        font-size: 13px;
+      }
+
+      .checkbox {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--color-text-secondary);
+        cursor: pointer;
+      }
+
+      .checkbox .box {
+        width: 16px;
+        height: 16px;
+        border: 1px solid var(--color-border);
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .checkbox.checked .box {
+        background: var(--color-primary);
+        border-color: var(--color-primary);
+      }
+
+      .link {
+        color: var(--color-primary);
+        text-decoration: none;
+        cursor: pointer;
+      }
+
+      .link:hover {
+        color: var(--color-primary-hover);
+      }
+
+      .btn-primary-full {
+        width: 100%;
+        height: 40px;
+        border: none;
+        border-radius: var(--radius);
+        background: var(--color-primary);
+        color: #fff;
+        font-size: 15px;
+        font-weight: 500;
+        font-family: var(--font);
+        cursor: pointer;
+        transition: background 0.15s ease-out;
+      }
+
+      .btn-primary-full:hover {
+        background: var(--color-primary-hover);
+      }
+
+      .btn-primary-full:focus-visible {
+        outline: 2px solid var(--color-primary);
+        outline-offset: 2px;
+      }
+
+      .btn-primary-full:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .form-divider {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin: 22px 0 16px;
+        color: var(--color-text-tertiary);
+        font-size: 12px;
+      }
+
+      .form-divider::before,
+      .form-divider::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: var(--color-split);
+      }
+
+      .sso-row {
+        display: flex;
+        gap: 12px;
+      }
+
+      .sso-btn {
+        flex: 1;
+        height: 38px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius);
+        background: var(--color-bg-container);
+        font-size: 13px;
+        color: var(--color-text);
+        cursor: pointer;
+        font-family: var(--font);
+        transition: all 0.15s ease-out;
+      }
+
+      .sso-btn:hover {
+        border-color: var(--color-primary-hover);
+        color: var(--color-primary-hover);
+      }
+
+      .sso-btn:focus-visible {
+        outline: 2px solid var(--color-primary);
+        outline-offset: 2px;
+      }
+
+      /* 错误摘要 */
+      .error-summary {
+        display: flex;
+        gap: 10px;
+        padding: 12px 14px;
+        margin-bottom: 20px;
+        background: var(--color-error-bg);
+        border: 1px solid #ffccc7;
+        border-radius: var(--radius);
+      }
+
+      .error-summary .es-icon {
+        flex: none;
+        color: var(--color-error);
+        margin-top: 2px;
+      }
+
+      .error-summary .es-title {
+        font-weight: 600;
+        font-size: 13px;
+        margin-bottom: 4px;
+      }
+
+      .error-summary ul {
+        margin: 0;
+        padding-left: 16px;
+        font-size: 12px;
+        color: var(--color-text-secondary);
+      }
+
+      .error-summary a {
+        color: var(--color-error);
+        text-decoration: underline;
+      }
+
+      /* ================= 首页 ================= */
+      .home-shell {
+        display: flex;
+        background: var(--color-bg-layout);
+        border: 1px solid var(--color-split);
+        border-radius: var(--radius);
+        overflow: hidden;
+        min-height: 720px;
+      }
+
+      .sider {
+        flex: 0 0 216px;
+        background: var(--color-bg-container);
+        border-right: 1px solid var(--color-split);
+        padding: 16px 12px;
+      }
+
+      .sider-logo {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 4px 8px 20px;
+        font-size: 16px;
+        font-weight: 600;
+      }
+
+      .sider-logo .logo-mark {
+        width: 28px;
+        height: 28px;
+        border-radius: 7px;
+        background: var(--color-primary);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .menu-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        height: 40px;
+        padding: 0 12px;
+        margin: 2px 0;
+        border-radius: var(--radius);
+        color: var(--color-text-secondary);
+        font-size: 14px;
+        cursor: pointer;
+        border-left: 2px solid transparent;
+      }
+
+      .menu-item:hover {
+        background: var(--color-fill-tertiary);
+        color: var(--color-text);
+      }
+
+      .menu-item.active {
+        background: var(--color-primary-bg);
+        color: var(--color-primary);
+        font-weight: 500;
+        border-left-color: var(--color-primary);
+      }
+
+      .menu-item .mi-badge {
+        margin-left: auto;
+        min-width: 20px;
+        height: 18px;
+        padding: 0 6px;
+        border-radius: 9px;
+        background: var(--color-error);
+        color: #fff;
+        font-size: 11px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .home-main {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+      }
+
+      .home-header {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        height: 56px;
+        padding: 0 20px;
+        background: var(--color-bg-container);
+        border-bottom: 1px solid var(--color-split);
+      }
+
+      .breadcrumb {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        color: var(--color-text-tertiary);
+      }
+
+      .breadcrumb .cur {
+        color: var(--color-text);
+      }
+
+      .home-header .spacer {
+        flex: 1;
+      }
+
+      .search-box {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        width: 220px;
+        height: 32px;
+        padding: 0 10px;
+        border: 1px solid var(--color-border);
+        border-radius: 16px;
+        color: var(--color-text-tertiary);
+        font-size: 13px;
+        cursor: text;
+      }
+
+      .icon-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border: none;
+        border-radius: var(--radius);
+        background: transparent;
+        color: var(--color-text-secondary);
+        cursor: pointer;
+        position: relative;
+        transition: background 0.15s ease-out;
+      }
+
+      .icon-btn:hover {
+        background: var(--color-fill-secondary);
+      }
+
+      .icon-btn:focus-visible {
+        outline: 2px solid var(--color-primary);
+        outline-offset: 2px;
+      }
+
+      .icon-btn .dot {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--color-error);
+        border: 1.5px solid #fff;
+      }
+
+      .avatar {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 3px 8px 3px 3px;
+        border-radius: 16px;
+        cursor: pointer;
+        font-size: 13px;
+      }
+
+      .avatar:hover {
+        background: var(--color-fill-secondary);
+      }
+
+      .avatar .ava {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: var(--color-primary);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+      }
+
+      .home-content {
+        padding: 20px;
+      }
+
+      .welcome-card {
+        display: flex;
+        align-items: center;
+        padding: 20px 24px;
+        margin-bottom: 16px;
+        background: linear-gradient(120deg, #e9f2ff 0%, #f5f9ff 100%);
+        border: 1px solid #d6e6ff;
+        border-radius: var(--radius);
+      }
+
+      .welcome-card h2 {
+        margin: 0 0 4px;
+        font-size: 20px;
+        font-weight: 600;
+      }
+
+      .welcome-card .wc-sub {
+        color: var(--color-text-secondary);
+        font-size: 13px;
+      }
+
+      .welcome-card .spacer {
+        flex: 1;
+      }
+
+      .quick-actions {
+        display: flex;
+        gap: 10px;
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        height: 34px;
+        padding: 0 15px;
+        border-radius: var(--radius);
+        border: 1px solid var(--color-border);
+        background: var(--color-bg-container);
+        color: var(--color-text);
+        font-size: 14px;
+        cursor: pointer;
+        font-family: var(--font);
+        transition: all 0.15s ease-out;
+      }
+
+      .btn:hover {
+        border-color: var(--color-primary-hover);
+        color: var(--color-primary-hover);
+      }
+
+      .btn:focus-visible {
+        outline: 2px solid var(--color-primary);
+        outline-offset: 2px;
+      }
+
+      .btn-primary {
+        background: var(--color-primary);
+        border-color: var(--color-primary);
+        color: #fff;
+      }
+
+      .btn-primary:hover {
+        background: var(--color-primary-hover);
+        border-color: var(--color-primary-hover);
+        color: #fff;
+      }
+
+      /* 统计卡 */
+      .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        margin-bottom: 16px;
+      }
+
+      .stat-card {
+        padding: 18px 20px;
+        background: var(--color-bg-container);
+        border: 1px solid var(--color-split);
+        border-radius: var(--radius);
+        cursor: pointer;
+        transition:
+          transform 0.15s ease-out,
+          border-color 0.15s ease-out;
+      }
+
+      .stat-card:hover {
+        transform: translateY(-2px);
+        border-color: rgba(22, 119, 255, 0.4);
+      }
+
+      .stat-card:focus-visible {
+        outline: 2px solid var(--color-primary);
+        outline-offset: 2px;
+      }
+
+      .stat-card .sc-label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        color: var(--color-text-secondary);
+      }
+
+      .stat-card .sc-icon {
+        width: 30px;
+        height: 30px;
+        border-radius: 7px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .stat-card .sc-value {
+        margin: 10px 0 6px;
+        font-size: 26px;
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+        line-height: 1.2;
+      }
+
+      .stat-card .sc-trend {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 12px;
+        color: var(--color-text-tertiary);
+      }
+
+      .trend-up {
+        color: var(--color-success);
+        font-weight: 500;
+      }
+
+      .trend-down {
+        color: var(--color-error);
+        font-weight: 500;
+      }
+
+      /* 主体两栏 */
+      .home-panels {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 16px;
+      }
+
+      .panel {
+        background: var(--color-bg-container);
+        border: 1px solid var(--color-split);
+        border-radius: var(--radius);
+      }
+
+      .panel-head {
+        display: flex;
+        align-items: center;
+        padding: 14px 20px;
+        border-bottom: 1px solid var(--color-split);
+      }
+
+      .panel-head h3 {
+        margin: 0;
+        font-size: 15px;
+        font-weight: 600;
+      }
+
+      .panel-head .spacer {
+        flex: 1;
+      }
+
+      .segmented {
+        display: inline-flex;
+        padding: 2px;
+        background: var(--color-fill-tertiary);
+        border-radius: var(--radius);
+        font-size: 12px;
+      }
+
+      .segmented span {
+        padding: 3px 10px;
+        border-radius: 4px;
+        color: var(--color-text-secondary);
+        cursor: pointer;
+      }
+
+      .segmented span.active {
+        background: var(--color-bg-container);
+        color: var(--color-text);
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+      }
+
+      .chart-body {
+        padding: 16px 20px 12px;
+      }
+
+      .chart-legend {
+        display: flex;
+        gap: 16px;
+        font-size: 12px;
+        color: var(--color-text-secondary);
+        margin-bottom: 8px;
+      }
+
+      .chart-legend .lg {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .chart-legend .swatch {
+        width: 16px;
+        height: 0;
+        border-top: 2.5px solid var(--color-primary);
+      }
+
+      .chart-legend .swatch.dashed {
+        border-top-style: dashed;
+        border-top-color: var(--color-warning);
+      }
+
+      .chart-foot {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 20px 14px;
+        font-size: 12px;
+        color: var(--color-text-tertiary);
+      }
+
+      /* 待办列表 */
+      .todo-list {
+        padding: 6px 0;
+      }
+
+      .todo-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 11px 20px;
+        cursor: pointer;
+        transition: background 0.15s ease-out;
+      }
+
+      .todo-item:hover {
+        background: var(--color-fill-tertiary);
+      }
+
+      .todo-item .ti-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex: none;
+      }
+
+      .todo-item .ti-body {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .todo-item .ti-title {
+        font-size: 13px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .todo-item .ti-time {
+        font-size: 12px;
+        color: var(--color-text-tertiary);
+      }
+
+      .todo-more {
+        display: block;
+        text-align: center;
+        padding: 10px;
+        font-size: 13px;
+        border-top: 1px solid var(--color-split);
+      }
+
+      .kbd {
+        display: inline-block;
+        padding: 1px 6px;
+        border: 1px solid var(--color-border);
+        border-bottom-width: 2px;
+        border-radius: 4px;
+        background: var(--color-fill-tertiary);
+        font-size: 11px;
+        font-family: 'SFMono-Regular', Consolas, monospace;
+        color: var(--color-text-secondary);
+      }
+    </style>
+  </head>
+  <body>
+    <h1 class="page-title">登录页与首页 UI 视觉稿</h1>
+
+    <!-- ===== 1. 登录页 ===== -->
+    <section class="stage">
+      <p class="stage-label">1. 登录页（≥1024px：左品牌区 + 右表单区）</p>
+      <p class="stage-note">
+        常显 label（非 placeholder 代替）；密码显隐切换；记住我 / 忘记密码；全宽唯一主 CTA；企业 SSO
+        次级入口。
+      </p>
+
+      <div class="login-shell">
+        <!-- 品牌区 -->
+        <div class="login-brand">
+          <div class="grid-deco"></div>
+          <div class="brand-logo">
+            <span class="logo-mark">
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#fff"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M4 7V5h16v2M9 19h6M12 5v14" />
+              </svg>
+            </span>
+            WorkBase 管理后台
+          </div>
+          <p class="brand-slogan">让内容协作<br />简单而高效</p>
+          <p class="brand-desc">一站式管理团队内容、成员与数据，<br />随时随地安全访问工作台。</p>
+          <ul class="brand-points">
+            <li>
+              <span class="bp-icon">
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#fff"
+                  stroke-width="2.4"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="m5 12.5 4.5 4.5L19 7.5" />
+                </svg>
+              </span>
+              多角色权限，精细到按钮级
+            </li>
+            <li>
+              <span class="bp-icon">
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#fff"
+                  stroke-width="2.4"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="m5 12.5 4.5 4.5L19 7.5" />
+                </svg>
+              </span>
+              操作留痕，数据安全可审计
+            </li>
+            <li>
+              <span class="bp-icon">
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#fff"
+                  stroke-width="2.4"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="m5 12.5 4.5 4.5L19 7.5" />
+                </svg>
+              </span>
+              富文本协作，云端自动保存
+            </li>
+          </ul>
+          <div class="brand-footer">© 2026 WorkBase · 隐私政策 · 服务条款</div>
+        </div>
+
+        <!-- 表单区 -->
+        <div class="login-form-col">
+          <form class="login-form" aria-label="登录表单">
+            <h2>欢迎回来</h2>
+            <p class="subtitle">请使用您的工作账号登录</p>
+
+            <div class="field">
+              <label for="acct">账号</label>
+              <div class="input-wrap">
+                <input
+                  id="acct"
+                  type="text"
+                  placeholder="手机号 / 邮箱 / 工号"
+                  autocomplete="username"
+                />
+                <span class="input-suffix" aria-hidden="true">
+                  <svg
+                    width="17"
+                    height="17"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <circle cx="12" cy="8" r="4" />
+                    <path d="M4 20c1.5-3.5 4.5-5 8-5s6.5 1.5 8 5" />
+                  </svg>
+                </span>
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="pwd">密码</label>
+              <div class="input-wrap">
+                <input
+                  id="pwd"
+                  type="password"
+                  placeholder="请输入密码"
+                  autocomplete="current-password"
+                />
+                <span class="input-suffix" role="button" aria-label="显示密码" tabindex="0">
+                  <svg
+                    width="17"
+                    height="17"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                </span>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <span class="checkbox checked">
+                <span class="box">
+                  <svg
+                    width="10"
+                    height="10"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#fff"
+                    stroke-width="3"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="m5 12.5 4.5 4.5L19 7.5" />
+                  </svg>
+                </span>
+                记住我
+              </span>
+              <a class="link">忘记密码？</a>
+            </div>
+
+            <button class="btn-primary-full" type="submit">登录</button>
+
+            <div class="form-divider">其他方式</div>
+            <div class="sso-row">
+              <button class="sso-btn" type="button">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <rect x="3" y="3" width="18" height="18" rx="4" />
+                  <path d="M8 12h8M12 8v8" />
+                </svg>
+                企业 SSO
+              </button>
+              <button class="sso-btn" type="button">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <rect x="3" y="3" width="18" height="18" rx="4" />
+                  <path d="M7 12a5 5 0 0 1 10 0" />
+                  <path d="M9.5 16h5" />
+                </svg>
+                钉钉登录
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 2. 登录错误态 ===== -->
+    <section class="stage">
+      <p class="stage-label">2. 登录失败态（错误摘要 + 就近内联错误）</p>
+      <p class="stage-note">
+        表单顶部错误摘要
+        <span class="kbd">role="alert"</span>
+        可聚焦、逐条链接到出错字段；内联错误保留在字段下方，非仅颜色传意。
+      </p>
+
+      <div class="login-shell" style="min-height: 0">
+        <div class="login-brand" style="flex-basis: 45%; min-height: 560px">
+          <div class="grid-deco"></div>
+          <div class="brand-logo">
+            <span class="logo-mark">
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#fff"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M4 7V5h16v2M9 19h6M12 5v14" />
+              </svg>
+            </span>
+            WorkBase 管理后台
+          </div>
+          <p class="brand-slogan" style="margin-top: 96px">让内容协作<br />简单而高效</p>
+          <div class="brand-footer">© 2026 WorkBase · 隐私政策 · 服务条款</div>
+        </div>
+
+        <div class="login-form-col">
+          <form class="login-form" aria-label="登录表单（错误态）">
+            <h2>欢迎回来</h2>
+            <p class="subtitle">请使用您的工作账号登录</p>
+
+            <!-- 错误摘要 -->
+            <div class="error-summary" role="alert" tabindex="-1">
+              <span class="es-icon">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.6"
+                  stroke-linecap="round"
+                  aria-hidden="true"
+                >
+                  <circle cx="12" cy="12" r="9" />
+                  <path d="M12 8v4m0 4h.01" />
+                </svg>
+              </span>
+              <div>
+                <div class="es-title">登录失败，请修正以下问题</div>
+                <ul>
+                  <li><a href="#acct2">账号格式不正确，请输入手机号、邮箱或工号</a></li>
+                  <li><a href="#pwd2">密码不能为空</a></li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="field error">
+              <label for="acct2">账号</label>
+              <div class="input-wrap">
+                <input
+                  id="acct2"
+                  type="text"
+                  value="zhangming"
+                  autocomplete="username"
+                  aria-describedby="acct2-err"
+                  aria-invalid="true"
+                />
+              </div>
+              <p class="field-hint" id="acct2-err">
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                  aria-hidden="true"
+                >
+                  <circle cx="12" cy="12" r="9" />
+                  <path d="M12 8v4m0 4h.01" />
+                </svg>
+                账号格式不正确，请输入手机号、邮箱或工号
+              </p>
+            </div>
+
+            <div class="field error">
+              <label for="pwd2">密码</label>
+              <div class="input-wrap">
+                <input
+                  id="pwd2"
+                  type="password"
+                  value=""
+                  autocomplete="current-password"
+                  aria-describedby="pwd2-err"
+                  aria-invalid="true"
+                />
+              </div>
+              <p class="field-hint" id="pwd2-err">
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                  aria-hidden="true"
+                >
+                  <circle cx="12" cy="12" r="9" />
+                  <path d="M12 8v4m0 4h.01" />
+                </svg>
+                密码不能为空
+              </p>
+            </div>
+
+            <div class="form-row">
+              <span class="checkbox">
+                <span class="box"></span>
+                记住我
+              </span>
+              <a class="link">忘记密码？</a>
+            </div>
+
+            <button class="btn-primary-full" type="submit">登录</button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 3. 首页 ===== -->
+    <section class="stage">
+      <p class="stage-label">3. 首页 / 工作台（ProLayout 侧栏 + PageContainer）</p>
+      <p class="stage-note">
+        问候区 + 快捷操作；4 张统计卡（千分位 / 等宽数字 / 环比箭头 + 文字）； 趋势折线图（图例 +
+        时间切换 + 悬停精确值）；待办动态（相对时间）。
+      </p>
+
+      <div class="home-shell">
+        <!-- 侧栏 -->
+        <nav class="sider" aria-label="主导航">
+          <div class="sider-logo">
+            <span class="logo-mark">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#fff"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M4 7V5h16v2M9 19h6M12 5v14" />
+              </svg>
+            </span>
+            WorkBase
+          </div>
+          <div class="menu-item active" aria-current="page">
+            <svg
+              width="17"
+              height="17"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7h-6v7H4a1 1 0 0 1-1-1Z" />
+            </svg>
+            首页
+          </div>
+          <div class="menu-item">
+            <svg
+              width="17"
+              height="17"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M5 3h11l3 3v15H5z" />
+              <path d="M9 9h6M9 13h6M9 17h4" />
+            </svg>
+            内容管理
+            <span class="mi-badge">12</span>
+          </div>
+          <div class="menu-item">
+            <svg
+              width="17"
+              height="17"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <circle cx="9" cy="8" r="3.5" />
+              <path d="M2.5 20c1-3.2 3.5-5 6.5-5s5.5 1.8 6.5 5" />
+              <circle cx="17" cy="9" r="2.6" />
+              <path d="M15.5 14.5c2.6.4 4.6 1.9 5.5 4.5" />
+            </svg>
+            用户与权限
+          </div>
+          <div class="menu-item">
+            <svg
+              width="17"
+              height="17"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M4 19V5m0 14h16" />
+              <path d="M8 15v-4M12 15V8M16 15v-6" />
+            </svg>
+            数据报表
+          </div>
+          <div class="menu-item">
+            <svg
+              width="17"
+              height="17"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <circle cx="12" cy="12" r="3" />
+              <path
+                d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1A1.7 1.7 0 0 0 9 19.4a1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"
+              />
+            </svg>
+            系统设置
+          </div>
+        </nav>
+
+        <!-- 主区域 -->
+        <div class="home-main">
+          <header class="home-header">
+            <div class="breadcrumb">
+              首页 <span aria-hidden="true">/</span>
+              <span class="cur">工作台</span>
+            </div>
+            <div class="spacer"></div>
+            <div class="search-box" role="search">
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+                aria-hidden="true"
+              >
+                <circle cx="11" cy="11" r="7" />
+                <path d="m21 21-4.3-4.3" />
+              </svg>
+              搜索功能、文档…
+              <span class="kbd" style="margin-left: auto">⌘K</span>
+            </div>
+            <button class="icon-btn" aria-label="通知，3 条未读">
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M18 9a6 6 0 1 0-12 0c0 6-2.5 7-2.5 7h17S18 15 18 9" />
+                <path d="M10.3 20a2 2 0 0 0 3.4 0" />
+              </svg>
+              <span class="dot"></span>
+            </button>
+            <div class="avatar" role="button" tabindex="0" aria-label="用户菜单：张明">
+              <span class="ava">张</span>
+              张明
+              <svg
+                width="12"
+                height="12"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="m6 9 6 6 6-6" />
+              </svg>
+            </div>
+          </header>
+
+          <main class="home-content">
+            <!-- 欢迎区 -->
+            <div class="welcome-card">
+              <div>
+                <h2>下午好，张明</h2>
+                <div class="wc-sub">今天是 2026年11月18日 星期三 · 有 12 篇内容等待审核</div>
+              </div>
+              <div class="spacer"></div>
+              <div class="quick-actions">
+                <button class="btn btn-primary">
+                  <svg
+                    width="15"
+                    height="15"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                    stroke-linecap="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M12 5v14M5 12h14" />
+                  </svg>
+                  新建文档
+                </button>
+                <button class="btn">邀请成员</button>
+                <button class="btn">导出报表</button>
+              </div>
+            </div>
+
+            <!-- 统计卡 -->
+            <div class="stat-grid">
+              <div
+                class="stat-card"
+                tabindex="0"
+                role="link"
+                aria-label="内容总数 12,860 篇，较上周上升 12.5%，查看内容管理"
+              >
+                <div class="sc-label">
+                  <span
+                    class="sc-icon"
+                    style="background: var(--color-primary-bg); color: var(--color-primary)"
+                  >
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.6"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d="M5 3h11l3 3v15H5z" />
+                      <path d="M9 12h6M9 16h4" />
+                    </svg>
+                  </span>
+                  内容总数
+                </div>
+                <div class="sc-value">12,860</div>
+                <div class="sc-trend">
+                  <span class="trend-up">
+                    <svg
+                      width="11"
+                      height="11"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2.2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      aria-hidden="true"
+                      style="display: inline-block; vertical-align: -1px"
+                    >
+                      <path d="M12 19V5M6 11l6-6 6 6" />
+                    </svg>
+                    12.5%
+                  </span>
+                  较上周
+                </div>
+              </div>
+
+              <div
+                class="stat-card"
+                tabindex="0"
+                role="link"
+                aria-label="本月新增 1,286 篇，较上月上升 8.2%"
+              >
+                <div class="sc-label">
+                  <span class="sc-icon" style="background: #e8f7ee; color: var(--color-success)">
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.6"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      aria-hidden="true"
+                    >
+                      <circle cx="12" cy="12" r="8" />
+                      <path d="M12 8v8M8 12h8" />
+                    </svg>
+                  </span>
+                  本月新增
+                </div>
+                <div class="sc-value">1,286</div>
+                <div class="sc-trend">
+                  <span class="trend-up">
+                    <svg
+                      width="11"
+                      height="11"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2.2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      aria-hidden="true"
+                      style="display: inline-block; vertical-align: -1px"
+                    >
+                      <path d="M12 19V5M6 11l6-6 6 6" />
+                    </svg>
+                    8.2%
+                  </span>
+                  较上月
+                </div>
+              </div>
+
+              <div
+                class="stat-card"
+                tabindex="0"
+                role="link"
+                aria-label="待审核 12 篇，较昨日下降 4 篇"
+              >
+                <div class="sc-label">
+                  <span class="sc-icon" style="background: #fff7e6; color: var(--color-warning)">
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.6"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      aria-hidden="true"
+                    >
+                      <circle cx="12" cy="12" r="8" />
+                      <path d="M12 8v4.5l3 1.8" />
+                    </svg>
+                  </span>
+                  待审核
+                </div>
+                <div class="sc-value">12</div>
+                <div class="sc-trend">
+                  <span class="trend-down">
+                    <svg
+                      width="11"
+                      height="11"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2.2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      aria-hidden="true"
+                      style="display: inline-block; vertical-align: -1px"
+                    >
+                      <path d="M12 5v14M6 13l6 6 6-6" />
+                    </svg>
+                    4 篇
+                  </span>
+                  较昨日
+                </div>
+              </div>
+
+              <div
+                class="stat-card"
+                tabindex="0"
+                role="link"
+                aria-label="活跃成员 328 人，较上周上升 3.1%"
+              >
+                <div class="sc-label">
+                  <span class="sc-icon" style="background: #f0eaff; color: #7c4dff">
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.6"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      aria-hidden="true"
+                    >
+                      <circle cx="9" cy="8" r="3.5" />
+                      <path d="M2.5 20c1-3.2 3.5-5 6.5-5s5.5 1.8 6.5 5" />
+                      <circle cx="17" cy="9" r="2.6" />
+                    </svg>
+                  </span>
+                  活跃成员
+                </div>
+                <div class="sc-value">328</div>
+                <div class="sc-trend">
+                  <span class="trend-up">
+                    <svg
+                      width="11"
+                      height="11"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2.2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      aria-hidden="true"
+                      style="display: inline-block; vertical-align: -1px"
+                    >
+                      <path d="M12 19V5M6 11l6-6 6 6" />
+                    </svg>
+                    3.1%
+                  </span>
+                  较上周
+                </div>
+              </div>
+            </div>
+
+            <!-- 图表 + 待办 -->
+            <div class="home-panels">
+              <div class="panel">
+                <div class="panel-head">
+                  <h3>内容增长趋势</h3>
+                  <div class="spacer"></div>
+                  <div class="segmented" role="tablist" aria-label="时间范围">
+                    <span class="active" role="tab" aria-selected="true">近 7 天</span>
+                    <span role="tab" aria-selected="false">近 30 天</span>
+                  </div>
+                </div>
+                <div class="chart-body">
+                  <div class="chart-legend">
+                    <span class="lg"><span class="swatch"></span>新增内容（篇）</span>
+                    <span class="lg"><span class="swatch dashed"></span>审核通过（篇）</span>
+                  </div>
+                  <!-- 折线图示意（实现时用 ECharts） -->
+                  <svg
+                    viewBox="0 0 720 220"
+                    width="100%"
+                    height="220"
+                    role="img"
+                    aria-label="近 7 天新增内容从 120 篇上升至 210 篇，审核通过从 100 篇上升至 185 篇"
+                  >
+                    <g stroke="#eef0f3" stroke-width="1">
+                      <line x1="40" y1="20" x2="700" y2="20" />
+                      <line x1="40" y1="70" x2="700" y2="70" />
+                      <line x1="40" y1="120" x2="700" y2="120" />
+                      <line x1="40" y1="170" x2="700" y2="170" />
+                    </g>
+                    <g fill="#8c8c8c" font-size="11" font-family="var(--font)">
+                      <text x="8" y="24">240</text>
+                      <text x="8" y="74">180</text>
+                      <text x="8" y="124">120</text>
+                      <text x="8" y="174">60</text>
+                      <text x="52" y="200">11-12</text>
+                      <text x="152" y="200">11-13</text>
+                      <text x="252" y="200">11-14</text>
+                      <text x="352" y="200">11-15</text>
+                      <text x="452" y="200">11-16</text>
+                      <text x="552" y="200">11-17</text>
+                      <text x="648" y="200">11-18</text>
+                    </g>
+                    <!-- 新增内容：实线 -->
+                    <polyline
+                      points="60,120 160,108 260,96 360,88 460,64 560,52 660,36"
+                      fill="none"
+                      stroke="#1677ff"
+                      stroke-width="2.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                    <g fill="#fff" stroke="#1677ff" stroke-width="2">
+                      <circle cx="60" cy="120" r="3.5" />
+                      <circle cx="160" cy="108" r="3.5" />
+                      <circle cx="260" cy="96" r="3.5" />
+                      <circle cx="360" cy="88" r="3.5" />
+                      <circle cx="460" cy="64" r="3.5" />
+                      <circle cx="560" cy="52" r="3.5" />
+                      <circle cx="660" cy="36" r="3.5" />
+                    </g>
+                    <!-- 审核通过：虚线 -->
+                    <polyline
+                      points="60,138 160,128 260,116 360,110 460,88 560,74 660,58"
+                      fill="none"
+                      stroke="#faad14"
+                      stroke-width="2.5"
+                      stroke-dasharray="7 5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                    <!-- 悬停 tooltip 示意 -->
+                    <g>
+                      <rect x="500" y="6" width="150" height="62" rx="6" fill="rgba(0,0,0,0.78)" />
+                      <text x="512" y="26" fill="#fff" font-size="11" font-family="var(--font)">
+                        11-17 周二
+                      </text>
+                      <text x="512" y="44" fill="#fff" font-size="11" font-family="var(--font)">
+                        新增 210 篇
+                      </text>
+                      <text x="512" y="60" fill="#fff" font-size="11" font-family="var(--font)">
+                        审核通过 185 篇
+                      </text>
+                    </g>
+                  </svg>
+                </div>
+                <div class="chart-foot">
+                  <span>数据统计截至 11-18 14:00</span>
+                  <a class="link">查看数据表</a>
+                </div>
+              </div>
+
+              <div class="panel">
+                <div class="panel-head">
+                  <h3>待办与动态</h3>
+                  <div class="spacer"></div>
+                  <a class="link" style="font-size: 12px">全部</a>
+                </div>
+                <div class="todo-list">
+                  <div class="todo-item" tabindex="0">
+                    <span class="ti-icon" style="background: #fff7e6; color: var(--color-warning)">
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.6"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        aria-hidden="true"
+                      >
+                        <circle cx="12" cy="12" r="8" />
+                        <path d="M12 8v4.5l3 1.8" />
+                      </svg>
+                    </span>
+                    <div class="ti-body">
+                      <div class="ti-title">3 篇《产品发布说明》待审核</div>
+                      <div class="ti-time" title="2026-11-18 13:20">12 分钟前</div>
+                    </div>
+                  </div>
+                  <div class="todo-item" tabindex="0">
+                    <span
+                      class="ti-icon"
+                      style="background: var(--color-primary-bg); color: var(--color-primary)"
+                    >
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.6"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        aria-hidden="true"
+                      >
+                        <circle cx="9" cy="8" r="3.5" />
+                        <path d="M2.5 20c1-3.2 3.5-5 6.5-5s5.5 1.8 6.5 5" />
+                      </svg>
+                    </span>
+                    <div class="ti-body">
+                      <div class="ti-title">李芳申请加入「内容运营」团队</div>
+                      <div class="ti-time" title="2026-11-18 11:05">2 小时前</div>
+                    </div>
+                  </div>
+                  <div class="todo-item" tabindex="0">
+                    <span class="ti-icon" style="background: #e8f7ee; color: var(--color-success)">
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        aria-hidden="true"
+                      >
+                        <circle cx="12" cy="12" r="8" />
+                        <path d="m8.5 12.5 2.5 2.5 4.5-5" />
+                      </svg>
+                    </span>
+                    <div class="ti-body">
+                      <div class="ti-title">《Q4 内容规划》已发布成功</div>
+                      <div class="ti-time" title="2026-11-18 09:40">4 小时前</div>
+                    </div>
+                  </div>
+                  <div class="todo-item" tabindex="0">
+                    <span
+                      class="ti-icon"
+                      style="
+                        background: var(--color-fill-tertiary);
+                        color: var(--color-text-tertiary);
+                      "
+                    >
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.6"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        aria-hidden="true"
+                      >
+                        <rect x="3" y="5" width="18" height="14" rx="2" />
+                        <path d="M7 9h10M7 13h6" />
+                      </svg>
+                    </span>
+                    <div class="ti-body">
+                      <div class="ti-title">系统将于周六 02:00 进行维护升级</div>
+                      <div class="ti-time" title="2026-11-17 18:00">昨天 18:00</div>
+                    </div>
+                  </div>
+                </div>
+                <a class="todo-more link">查看全部</a>
+              </div>
+            </div>
+          </main>
+        </div>
+      </div>
+    </section>
+  </body>
+</html>
