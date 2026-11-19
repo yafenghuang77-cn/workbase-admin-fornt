@@ -10,25 +10,25 @@
 
 本次核对的核心安装版本为 React 19.3.1、Vite 8.3.5、antd 6.6.8、`@ant-design/pro-components` 3.1.15-8、TanStack Query 5.105.0 和 TanStack Router 1.170.46。这里记录的是扫描快照；后续开发使用 `pnpm list --depth 0` 重新确认，尤其不要将 ProComponents 2.x 示例直接套到当前 3.x 预发布版本。
 
-- 当前定义了独立欢迎页、Tiptap 富文本演示和登录占位页。应用已接入 React Compiler、TanStack Router 文件路由及 antd 应用级主题与反馈上下文。
+- 当前定义了独立欢迎页、Tiptap 富文本演示和登录占位页。应用已接入 React Compiler、TanStack Router 集中式代码路由及 antd 应用级主题与反馈上下文。
 - 统一 Axios 请求层、共享 QueryClient、登录认证、业务权限和监控初始化尚待接入。开发入口仍渲染 Query Devtools，缺少 QueryClient 时会报 `No QueryClient set`。
 - Tailwind、Orval 和 MSW 等依赖按场景接入。当前已接入 Vitest 规范回归、组件和单元测试，以及 Playwright 浏览器测试。
 - Vite 使用 `/workbase/` 基础路径，开发端口为 `8888`，API 代理目标为 `http://127.0.0.1:9999`，构建目录为 `workbase/`。启动、环境和 Gzip 部署要求见 [README.md](./README.md)。
 
-`src/routes` 定义文件路由，`src/router` 维护路由实例与错误反馈，`src/pages` 放页面，`src/providers` 提供应用上下文，`src/styles` 放全局样式。页面专用组件、Hook 和样式放在所属页面附近，可复用的富文本组件位于 `src/components/rich-text-editor`。
+`src/router/routes.ts` 集中定义路由，`src/router` 维护路由实例与错误反馈，`src/pages` 放页面，`src/providers` 提供应用上下文，`src/styles` 放全局样式。页面专用组件、Hook 和样式放在所属页面附近，可复用的富文本组件位于 `src/components/rich-text-editor`。
 
 开发前先搜索所属功能、共享代码和已安装依赖。复用顺序为：已有业务能力 → 适合该场景的 ProComponents / antd 或现有专用库 → 少量业务组合代码 → 有明确缺口时才新增依赖或自研。不要为了复用而引入通用 CRUD 引擎，也不要因依赖已安装就全部接入。
 
-## 文件路由
+## 集中式代码路由
 
-新增页面时，在 `src/routes` 按 TanStack Router 文件命名规则添加路由，使用 `createFileRoute` 导出 `Route`。页面组件放在 `src/pages` 对应目录。路由路径使用应用内路径，部署前缀由 `createRouter` 的 `basepath` 统一处理。[TanStack Router 文件路由](https://tanstack.com/router/latest/docs/routing/file-based-routing)
+在 `src/router/routes.ts` 使用 TanStack Router 的 `createRootRoute` / `createRoute` 集中定义路由，通过 `addChildren` 组装路由树；页面组件放在 `src/pages` 对应目录，无需为每个页面新增路由文件。[TanStack Router 代码路由](https://tanstack.com/router/latest/docs/routing/code-based-routing)
 
-- `__root.ts` 配置 404 和路由错误反馈。
-- `index.ts` 将 `/` 绑定到首页。
-- `welcome.ts` 使用 `beforeLoad` 和 `redirect` 处理旧地址。
-- `rich-text-editor.ts` 和 `login.ts` 分别按需加载富文本演示和登录占位页。
+- 根路由配置 404 和路由错误反馈，`/` 绑定首页。
+- `/welcome` 使用 `beforeLoad` 和 `redirect` 处理旧地址。
+- `/rich-text-editor` 和 `/login` 使用 `lazyRouteComponent` 按需加载页面。
+- 路由路径使用应用内路径，部署前缀由 `src/router/index.ts` 中 `createRouter` 的 `basepath` 统一处理。
 
-Vite 插件在开发和构建时生成 `src/routeTree.gen.ts`。提交路由变更时一并提交该文件，以便新检出的工作区直接运行 `pnpm check` 和 `pnpm typecheck`。该文件由插件维护，已从 ESLint 和 Prettier 排除。
+保留 `@tanstack/router-plugin` 依赖和 Vite 插件配置，当前通过 `fileBasedRouting = false` 停用文件路由插件。实际安装的插件版本不提供 `enableRouteGeneration` 配置项，因此在 Vite 注册处控制是否启用。当前不再扫描 `src/routes` 或生成 `src/routeTree.gen.ts`，新增路由直接修改集中配置即可参与类型检查。若将来重新启用文件路由，需要同时恢复路由源文件并调整路由树入口，不能只修改开关。
 
 ## 页面与组件优先级
 

@@ -5,6 +5,9 @@ import { createLogger } from 'vite';
 import { compression } from 'vite-plugin-compression2';
 import { defineConfig } from 'vitest/config';
 
+// 保留文件路由插件及配置；集中式代码路由无需运行文件路由生成器。
+const fileBasedRouting = false;
+
 const environmentNames: Readonly<Record<string, string>> = {
   development: '开发环境',
   test: '测试环境',
@@ -33,7 +36,7 @@ export default defineConfig(({ command, mode, isPreview }) => {
         threshold: 10240, // 仅对超过 10KB 的文件进行压缩
         deleteOriginalAssets: true, // 保留原始文件，以兼容不支持 Gzip 的环境
       }),
-      tanstackRouter({ target: 'react', semicolons: true }),
+      fileBasedRouting ? tanstackRouter({ target: 'react', semicolons: true }) : false,
       react(),
       babel({ presets: [reactCompilerPreset()] }),
     ],

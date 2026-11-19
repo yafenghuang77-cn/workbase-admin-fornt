@@ -33,7 +33,6 @@ export default defineConfig([
     '.husky/_/**',
     'playwright-report/**',
     'test-results/**',
-    'src/routeTree.gen.ts',
     'src/generated/**',
   ]),
   {

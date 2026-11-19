@@ -77,9 +77,7 @@ Vite 将 `/api` 请求转发到 `http://127.0.0.1:9999` 并移除 `/api` 前缀�
 src/
   main.tsx                       # 应用入口
   providers/                     # antd 应用级上下文
-  routes/                        # TanStack Router 文件路由
-  router/                        # 路由实例和错误反馈
-  routeTree.gen.ts               # 生成的路由树
+  router/                        # 集中路由配置、路由实例和错误反馈
   pages/                         # 欢迎页、登录占位页、富文本演示
   components/rich-text-editor/  # 可复用的编辑器和只读展示组件
   assets/                        # 由应用引用的静态资源
@@ -90,7 +88,7 @@ tests/                           # Vitest 规范回归、组件、单元测试�
 vite.config.ts                   # 开发、构建和 Vitest 配置
 ```
 
-新增路由时，将路由定义和插件生成的 `src/routeTree.gen.ts` 一并纳入版本控制。
+新增路由在 `src/router/routes.ts` 中集中配置，页面组件放入 `src/pages`，不再为每页创建路由文件。保留 TanStack Router 插件依赖和 Vite 配置，当前停用文件路由生成。
 
 ## 贡献
 
