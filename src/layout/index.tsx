@@ -25,6 +25,9 @@ const LayoutHeader = ({
 }: Pick<ProLayoutProps, 'collapsed' | 'onCollapse'>) => {
   const path = useAppPath();
   const current = navigationLinks.find((item) => item.path === path);
+  const parent = navigation.find(
+    (item) => !item.hideInMenu && item.children?.some((child) => child.path === path),
+  );
   return (
     <div className="workbase-header-title">
       <Button
@@ -35,7 +38,11 @@ const LayoutHeader = ({
         onClick={() => onCollapse?.(!collapsed)}
       />
       <Breadcrumb
-        items={[{ title: <Link to="/">首页</Link> }, { title: current?.name ?? '工作台' }]}
+        items={[
+          { title: <Link to="/">首页</Link> },
+          ...(parent ? [{ title: parent.name }] : []),
+          { title: current?.name ?? '工作台' },
+        ]}
       />
     </div>
   );
@@ -89,9 +96,11 @@ export const WorkbaseLayout = ({ children }: PropsWithChildren) => {
           collapsed={collapsed}
           onCollapse={setCollapsed}
           collapsedButtonRender={false}
-          siderMenuType="group"
-          menu={{ locale: false }}
+          siderMenuType="sub"
+          menu={{ locale: false, defaultOpenAll: false }}
           menuProps={{
+            theme: 'dark',
+            inlineIndent: 16,
             selectedKeys: [path],
             onClick: () => {
               if (window.matchMedia('(max-width: 767px)').matches) setCollapsed(true);

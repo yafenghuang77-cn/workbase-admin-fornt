@@ -2,12 +2,11 @@ import {
   createRootRoute,
   createRoute,
   lazyRouteComponent,
-  notFound,
+  // notFound,
   redirect,
 } from '@tanstack/react-router';
 
 import { WorkbaseLayout } from '@/layout';
-import { navigationLinks } from '@/layout/navigation';
 import { NotFoundPage, RouteErrorPage } from '@/router/RouteFeedback';
 
 const rootRoute = createRootRoute({
@@ -53,18 +52,8 @@ const resourcesRoute = createRoute({
   component: lazyRouteComponent(() => import('@/pages/welcome')),
 });
 
-const moduleRoute = createRoute({
-  getParentRoute: () => appRoute,
-  path: '/modules/$section',
-  beforeLoad: ({ params }) => {
-    if (!navigationLinks.some((item) => item.path === `/modules/${params.section}`))
-      throw notFound();
-  },
-  component: lazyRouteComponent(() => import('@/pages/module'), 'ModulePage'),
-});
-
 export const routeTree = rootRoute.addChildren([
-  appRoute.addChildren([homeRoute, richTextEditorRoute, resourcesRoute, moduleRoute]),
+  appRoute.addChildren([homeRoute, richTextEditorRoute, resourcesRoute]),
   welcomeRoute,
   loginRoute,
 ]);

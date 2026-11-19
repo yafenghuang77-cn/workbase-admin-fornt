@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { useEffect, useState } from 'react';
 
 import { PageContainer } from '@ant-design/pro-components';
-import { Button, ConfigProvider, Form, theme } from 'antd';
+import { Button, Form, theme } from 'antd';
 
 import type { RichTextValue } from '@/components/rich-text-editor';
 import { isRichTextEmpty, RichTextEditor, RichTextViewer } from '@/components/rich-text-editor';
@@ -71,86 +71,84 @@ export const RichTextEditorPage = () => {
   useEffect(() => uploads.clear, [uploads]);
 
   return (
-    <ConfigProvider theme={{ algorithm: dark ? theme.darkAlgorithm : theme.defaultAlgorithm }}>
-      <DemoLayout>
-        <PageContainer
-          title="富文本编辑器"
-          content="在此体验排版、图片、视频、附件与实时预览。"
-          breadcrumbRender={false}
-          extra={[
-            <Button key="theme" htmlType="button" onClick={() => setDark((current) => !current)}>
-              {dark ? '浅色模式' : '深色模式'}
-            </Button>,
-            <Button
-              key="disable"
-              htmlType="button"
-              onClick={() => setDisabled((current) => !current)}
+    <DemoLayout>
+      <PageContainer
+        title="富文本编辑器"
+        content="在此体验排版、图片、视频、附件与实时预览。"
+        breadcrumbRender={false}
+        extra={[
+          <Button key="theme" htmlType="button" onClick={() => setDark((current) => !current)}>
+            {dark ? '浅色模式' : '深色模式'}
+          </Button>,
+          <Button
+            key="disable"
+            htmlType="button"
+            onClick={() => setDisabled((current) => !current)}
+          >
+            {disabled ? '启用编辑' : '禁用编辑'}
+          </Button>,
+        ]}
+      >
+        <div className="rich-text-demo__columns">
+          <section className="rich-text-demo__panel" aria-label="编辑区域">
+            <Form<ArticleValues>
+              form={form}
+              name="rich-text-demo"
+              layout="vertical"
+              initialValues={{ body: initialContent }}
+              disabled={disabled}
             >
-              {disabled ? '启用编辑' : '禁用编辑'}
-            </Button>,
-          ]}
-        >
-          <div className="rich-text-demo__columns">
-            <section className="rich-text-demo__panel" aria-label="编辑区域">
-              <Form<ArticleValues>
-                form={form}
-                name="rich-text-demo"
-                layout="vertical"
-                initialValues={{ body: initialContent }}
-                disabled={disabled}
+              <Form.Item<ArticleValues> name="body" label="文章正文" rules={[]}>
+                <RichTextEditor
+                  aria-label="文章正文"
+                  maxLength={20000}
+                  imageUpload={uploads.imageUpload}
+                  videoUpload={uploads.videoUpload}
+                  fileUpload={uploads.fileUpload}
+                />
+              </Form.Item>
+            </Form>
+            <div className="rich-text-demo__actions">
+              <Button
+                htmlType="button"
+                type="primary"
+                onClick={() => {
+                  form.validateFields().catch(() => undefined);
+                }}
               >
-                <Form.Item<ArticleValues> name="body" label="文章正文" rules={[]}>
-                  <RichTextEditor
-                    aria-label="文章正文"
-                    maxLength={20000}
-                    imageUpload={uploads.imageUpload}
-                    videoUpload={uploads.videoUpload}
-                    fileUpload={uploads.fileUpload}
-                  />
-                </Form.Item>
-              </Form>
-              <div className="rich-text-demo__actions">
-                <Button
-                  htmlType="button"
-                  type="primary"
-                  onClick={() => {
-                    form.validateFields().catch(() => undefined);
-                  }}
-                >
-                  校验内容
-                </Button>
-                <Button
-                  htmlType="button"
-                  onClick={() => {
-                    form.resetFields();
-                    uploads.clear();
-                  }}
-                >
-                  重置内容
-                </Button>
-                <Button
-                  htmlType="button"
-                  onClick={() => {
-                    form.resetFields(['body']);
-                    form.setFieldValue('body', null);
-                    uploads.clear();
-                  }}
-                >
-                  清空内容
-                </Button>
-              </div>
-            </section>
-            <section className="rich-text-demo__panel" aria-label="展示预览">
-              <h2 className="rich-text-demo__heading">展示预览</h2>
-              {isRichTextEmpty(body) ? (
-                <p>编辑左侧内容，在此查看效果。</p>
-              ) : (
-                <RichTextViewer value={body} aria-label="文章展示预览" />
-              )}
-            </section>
-          </div>
-        </PageContainer>
-      </DemoLayout>
-    </ConfigProvider>
+                校验内容
+              </Button>
+              <Button
+                htmlType="button"
+                onClick={() => {
+                  form.resetFields();
+                  uploads.clear();
+                }}
+              >
+                重置内容
+              </Button>
+              <Button
+                htmlType="button"
+                onClick={() => {
+                  form.resetFields(['body']);
+                  form.setFieldValue('body', null);
+                  uploads.clear();
+                }}
+              >
+                清空内容
+              </Button>
+            </div>
+          </section>
+          <section className="rich-text-demo__panel" aria-label="展示预览">
+            <h2 className="rich-text-demo__heading">展示预览</h2>
+            {isRichTextEmpty(body) ? (
+              <p>编辑左侧内容，在此查看效果。</p>
+            ) : (
+              <RichTextViewer value={body} aria-label="文章展示预览" />
+            )}
+          </section>
+        </div>
+      </PageContainer>
+    </DemoLayout>
   );
 };

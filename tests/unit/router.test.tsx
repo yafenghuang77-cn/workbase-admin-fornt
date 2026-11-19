@@ -21,9 +21,9 @@ const renderRoute = (pathname: string) => {
 test('部署首页显示工作台和公共导航', async () => {
   renderRoute('/workbase/');
   expect(await screen.findByRole('heading', { name: '工作台' }, { timeout: 8000 })).toBeVisible();
-  expect(screen.getByRole('link', { name: /客户管理/u })).toHaveAttribute(
-    'href',
-    '/workbase/modules/customers',
+  expect(screen.getByRole('menuitem', { name: /开发资源/u })).toHaveAttribute(
+    'aria-expanded',
+    'false',
   );
 });
 
@@ -36,7 +36,7 @@ test('学习资源保留在资源页面', async () => {
   );
 });
 
-test('导航支持折叠和业务模块跳转', async () => {
+test('导航支持折叠和子菜单跳转', async () => {
   const user = userEvent.setup();
   const { history } = renderRoute('/workbase/');
   await user.click(await screen.findByRole('button', { name: '收起导航' }));
@@ -45,9 +45,13 @@ test('导航支持折叠和业务模块跳转', async () => {
     'false',
   );
   await user.click(screen.getByRole('button', { name: '展开导航' }));
-  await user.click(screen.getByRole('link', { name: /客户管理/u }));
-  expect(await screen.findByRole('status', { name: '暂无数据' })).toBeVisible();
-  expect(history.location.pathname).toBe('/workbase/modules/customers');
+  await user.click(screen.getByRole('menuitem', { name: /开发资源/u }));
+  await user.click(await screen.findByRole('link', { name: /欢迎与资源/u }));
+  await waitFor(() => expect(history.location.pathname).toBe('/workbase/resources'));
+  expect(screen.getByRole('menuitem', { name: /开发资源/u })).toHaveAttribute(
+    'aria-expanded',
+    'true',
+  );
 });
 
 test('工作台可创建演示任务', { timeout: 12000 }, async () => {

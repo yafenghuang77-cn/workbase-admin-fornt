@@ -10,10 +10,8 @@ import {
 } from '@ant-design/icons';
 import { PageContainer } from '@ant-design/pro-components';
 import type { TableColumnsType } from 'antd';
-import { App, Button, Card, ConfigProvider, Form, Input, Modal, Table, Tag } from 'antd';
+import { App, Button, Card, Form, Input, Modal, Table, Tag } from 'antd';
 import dayjs from 'dayjs';
-
-import { workbenchTheme } from '@/layout/theme';
 
 import type { Task } from './data';
 import { initialTasks } from './data';
@@ -131,105 +129,98 @@ export const WorkbenchPage = () => {
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
   return (
-    <ConfigProvider theme={workbenchTheme}>
-      <div className="workbench">
-        <PageContainer
-          title={<h1 className="workbench-title">工作台</h1>}
-          breadcrumbRender={false}
-          token={{ paddingInlinePageContainerContent: 0, paddingBlockPageContainerContent: 0 }}
-          content="欢迎回来，王小明。今天有 24 项待办任务等待处理。"
-          extra={[
-            <Button
-              key="create"
-              aria-label="新建任务"
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() => openEditor('new')}
+    <>
+      <PageContainer
+        title={<h1 className="workbench-title">工作台</h1>}
+        breadcrumbRender={false}
+        token={{ paddingInlinePageContainerContent: 0, paddingBlockPageContainerContent: 0 }}
+        content="欢迎回来，王小明。今天有 24 项待办任务等待处理。"
+        extra={[
+          <Button
+            key="create"
+            aria-label="新建任务"
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => openEditor('new')}
+          >
+            新建任务
+          </Button>,
+          <Button aria-label="导出" key="export" icon={<DownloadOutlined />} onClick={exportTasks}>
+            导出
+          </Button>,
+        ]}
+      >
+        <div className="workbench-statistics">
+          {statistics.map((stat) => (
+            <Card
+              key={stat.label}
+              variant="borderless"
+              className="workbench-statistic"
+              classNames={{ body: 'workbench-statistic-body' }}
             >
-              新建任务
-            </Button>,
-            <Button
-              aria-label="导出"
-              key="export"
-              icon={<DownloadOutlined />}
-              onClick={exportTasks}
-            >
-              导出
-            </Button>,
-          ]}
-        >
-          <div className="workbench-statistics">
-            {statistics.map((stat) => (
-              <Card
-                key={stat.label}
-                variant="borderless"
-                className="workbench-statistic"
-                classNames={{ body: 'workbench-statistic-body' }}
-              >
-                <div className="workbench-statistic-content">
-                  <span className="workbench-statistic-icon">{stat.icon}</span>
-                  <div>
-                    <div className="workbench-statistic-value">{stat.value}</div>
-                    <div className="workbench-statistic-label">{stat.label}</div>
-                    <div
-                      className={
-                        stat.negative
-                          ? 'workbench-comparison workbench-comparison-negative'
-                          : 'workbench-comparison'
-                      }
-                    >
-                      {stat.comparison}
-                    </div>
+              <div className="workbench-statistic-content">
+                <span className="workbench-statistic-icon">{stat.icon}</span>
+                <div>
+                  <div className="workbench-statistic-value">{stat.value}</div>
+                  <div className="workbench-statistic-label">{stat.label}</div>
+                  <div
+                    className={
+                      stat.negative
+                        ? 'workbench-comparison workbench-comparison-negative'
+                        : 'workbench-comparison'
+                    }
+                  >
+                    {stat.comparison}
                   </div>
                 </div>
-              </Card>
-            ))}
-          </div>
-          <Card
-            className="workbench-tasks"
-            variant="borderless"
-            title="近期任务"
-            extra={
-              <Button type="link" onClick={() => setShowAll((value) => !value)}>
-                {showAll ? '收起列表' : '查看全部'}
-              </Button>
-            }
-            classNames={{ body: 'workbench-tasks-body' }}
-          >
-            <Table<Task>
-              rowKey="id"
-              columns={columns}
-              dataSource={showAll ? tasks : tasks.slice(0, 5)}
-              pagination={showAll ? { pageSize: 10, hideOnSinglePage: true } : false}
-              scroll={{ x: 'max-content' }}
-            />
-          </Card>
-        </PageContainer>
-        <Modal
-          title={editing === 'new' ? '新建任务' : '编辑任务'}
-          open={editing !== null}
-          onCancel={() => setEditing(null)}
-          onOk={() => form.submit()}
-          okText="保存"
+              </div>
+            </Card>
+          ))}
+        </div>
+        <Card
+          className="workbench-tasks"
+          variant="borderless"
+          title="近期任务"
+          extra={
+            <Button type="link" onClick={() => setShowAll((value) => !value)}>
+              {showAll ? '收起列表' : '查看全部'}
+            </Button>
+          }
+          classNames={{ body: 'workbench-tasks-body' }}
         >
-          <Form form={form} layout="vertical" onFinish={saveTask}>
-            <Form.Item
-              name="name"
-              label="任务名称"
-              rules={[{ required: true, whitespace: true, message: '请输入任务名称' }]}
-            >
-              <Input maxLength={100} />
-            </Form.Item>
-            <Form.Item
-              name="owner"
-              label="负责人"
-              rules={[{ required: true, whitespace: true, message: '请输入负责人' }]}
-            >
-              <Input maxLength={30} />
-            </Form.Item>
-          </Form>
-        </Modal>
-      </div>
-    </ConfigProvider>
+          <Table<Task>
+            rowKey="id"
+            columns={columns}
+            dataSource={showAll ? tasks : tasks.slice(0, 5)}
+            pagination={showAll ? { pageSize: 10, hideOnSinglePage: true } : false}
+            scroll={{ x: 'max-content' }}
+          />
+        </Card>
+      </PageContainer>
+      <Modal
+        title={editing === 'new' ? '新建任务' : '编辑任务'}
+        open={editing !== null}
+        onCancel={() => setEditing(null)}
+        onOk={() => form.submit()}
+        okText="保存"
+      >
+        <Form form={form} layout="vertical" onFinish={saveTask}>
+          <Form.Item
+            name="name"
+            label="任务名称"
+            rules={[{ required: true, whitespace: true, message: '请输入任务名称' }]}
+          >
+            <Input maxLength={100} />
+          </Form.Item>
+          <Form.Item
+            name="owner"
+            label="负责人"
+            rules={[{ required: true, whitespace: true, message: '请输入负责人' }]}
+          >
+            <Input maxLength={30} />
+          </Form.Item>
+        </Form>
+      </Modal>
+    </>
   );
 };

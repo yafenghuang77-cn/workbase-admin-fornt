@@ -8,6 +8,7 @@ export const router = createRouter({
   defaultPreload: 'intent',
   defaultPendingComponent: () => null,
   scrollRestoration: true,
+  scrollToTopSelectors: ['#workbase-content'],
 });
 
 router.subscribe('onBeforeLoad', () => {});
