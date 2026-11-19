@@ -92,7 +92,7 @@ test('切换深浅色会更新主题，并保留正文和预览', async ({ page 
   await page.getByRole('button', { name: '清空内容' }).click();
   await editor.fill(text);
   const background = (element: HTMLElement) => getComputedStyle(element).backgroundColor;
-  const main = page.getByRole('main');
+  const main = page.getByRole('region', { name: '富文本编辑器演示' });
   const lightBackground = await main.evaluate(background);
 
   await page.getByRole('button', { name: '深色模式' }).click();

@@ -26,7 +26,7 @@ const resources = [
 
 const WelcomePage = () => {
   return (
-    <main className="welcome-page">
+    <section className="welcome-page" aria-label="欢迎与资源">
       <div className="welcome-intro">
         <p className="welcome-eyebrow">WORKBASE · 企业级工作台</p>
         <h1 className="welcome-heading">欢迎使用 Workbase</h1>
@@ -60,7 +60,7 @@ const WelcomePage = () => {
           </a>
         ))}
       </div>
-    </main>
+    </section>
   );
 };
 

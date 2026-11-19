@@ -51,12 +51,13 @@ const initialContent: RichTextValue = {
 const DemoLayout = ({ children }: { children: ReactNode }) => {
   const { token } = theme.useToken();
   return (
-    <main
+    <section
+      aria-label="富文本编辑器演示"
       className="rich-text-demo"
       style={{ background: token.colorBgLayout, color: token.colorText }}
     >
       {children}
-    </main>
+    </section>
   );
 };
 

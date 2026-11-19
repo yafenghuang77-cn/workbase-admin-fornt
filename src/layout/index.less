@@ -1,0 +1,161 @@
+.workbase-layout {
+  --workbase-header-height: 56px;
+  --workbase-content-padding: 24px;
+  --workbase-sidebar-start: #0d3da4;
+  --workbase-sidebar-end: #003080;
+
+  min-height: 100vh;
+
+  .ant-pro-layout .ant-pro-layout-content {
+    padding: 0;
+  }
+
+  .ant-pro-layout .ant-layout-sider.ant-pro-sider {
+    background: linear-gradient(165deg, var(--workbase-sidebar-start), var(--workbase-sidebar-end));
+  }
+
+  .ant-pro-sider .ant-pro-sider-logo {
+    height: var(--workbase-header-height);
+    padding: 8px;
+  }
+
+  .ant-pro-sider .workbase-brand h1 {
+    height: auto;
+    margin: 0;
+    color: #fff;
+    font-size: 18px;
+    font-weight: 650;
+    line-height: 32px;
+  }
+
+  .ant-pro-sider-menu .ant-menu-item-group-title {
+    padding-top: 16px;
+    color: #adc1e9;
+    font-size: 12px;
+    letter-spacing: 1px;
+  }
+
+  .ant-pro-sider-menu .ant-menu-item-divider {
+    display: none;
+  }
+
+  .ant-pro-sider-menu .ant-menu-item-selected {
+    font-weight: 600;
+  }
+
+  .ant-pro-global-header {
+    border-bottom: 1px solid #efefef;
+  }
+}
+
+.workbase-brand {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  color: #fff;
+}
+
+.workbase-logo {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: #fff;
+  color: #0958d9;
+}
+
+.workbase-header-title,
+.workbase-header-actions {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  min-width: 0;
+  line-height: normal;
+}
+
+.workbase-search {
+  width: 220px;
+}
+
+.workbase-user {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding-inline: 0;
+}
+
+.workbase-avatar {
+  background: #1677ff;
+}
+
+.workbase-content {
+  min-width: 0;
+  padding: var(--workbase-content-padding);
+}
+
+.workbase-skip-link {
+  position: fixed;
+  z-index: 2000;
+  top: -60px;
+  left: 12px;
+  padding: 12px;
+  background: #fff;
+
+  &:focus {
+    top: 8px;
+  }
+}
+
+.workbase-desktop-header {
+  position: sticky;
+  z-index: 20;
+  top: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: var(--workbase-header-height);
+  padding-inline: 16px var(--workbase-content-padding);
+  border-bottom: 1px solid #efefef;
+  background: #fff;
+}
+
+.workbase-mobile-header {
+  display: flex;
+  flex: 1;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+@media (max-width: 767px) {
+  .workbase-layout {
+    --workbase-content-padding: 16px;
+  }
+
+  .workbase-search {
+    width: 150px;
+  }
+
+  .workbase-header-actions {
+    gap: 8px;
+  }
+
+  .workbase-header-title .ant-breadcrumb,
+  .workbase-user-name,
+  .workbase-desktop-header {
+    display: none;
+  }
+
+  .workbase-user {
+    display: flex;
+    align-items: center;
+    min-width: 40px;
+  }
+}
+
+.workbase-header-title {
+  gap: 12px;
+}

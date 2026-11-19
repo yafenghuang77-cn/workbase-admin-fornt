@@ -18,12 +18,14 @@ pnpm dev
 
 ## 页面入口
 
-| 路径                         | 当前功能                                                                 |
-| ---------------------------- | ------------------------------------------------------------------------ |
-| `/workbase/`                 | 独立欢迎页，提供 Ant Design、ProComponents 和 TanStack Router 的文档入口 |
-| `/workbase/welcome`          | 旧欢迎页地址，自动跳转至首页                                             |
-| `/workbase/rich-text-editor` | Tiptap 富文本演示，支持排版、链接、表格、图片、视频、附件和实时预览      |
-| `/workbase/login`            | 登录演示表单，提供前端校验和记住账号，尚未接入真实认证                   |
+| 路径                         | 当前功能                                                            |
+| ---------------------------- | ------------------------------------------------------------------- |
+| `/workbase/`                 | 管理端工作台，展示统计与近期任务（演示数据）                        |
+| `/workbase/resources`        | 欢迎页与 Ant Design、ProComponents、TanStack Router 文档入口        |
+| `/workbase/modules/:section` | 业务导航的布局预览，尚未接入业务功能                                |
+| `/workbase/welcome`          | 旧欢迎页地址，自动跳转至首页                                        |
+| `/workbase/rich-text-editor` | Tiptap 富文本演示，支持排版、链接、表格、图片、视频、附件和实时预览 |
+| `/workbase/login`            | 登录演示表单，提供前端校验和记住账号，尚未接入真实认证              |
 
 富文本演示使用本地模拟上传，可切换浅色和深色主题、禁用编辑、重置或清空内容。复用组件导出 `RichTextEditor` 和 `RichTextViewer`，共用 Tiptap JSON 内容格式。业务上传通过组件回调接入。[富文本组件入口](./src/components/rich-text-editor/index.ts)
 
@@ -78,7 +80,8 @@ src/
   main.tsx                       # 应用入口
   providers/                     # antd 应用级上下文
   router/                        # 集中路由配置、路由实例和错误反馈
-  pages/                         # 欢迎页、登录占位页、富文本演示
+  layout/                        # ProLayout 公共布局、导航配置与顶栏操作
+  pages/                         # 工作台、欢迎页、业务占位、登录与富文本演示
   components/rich-text-editor/  # 可复用的编辑器和只读展示组件
   assets/                        # 由应用引用的静态资源
   styles/                        # 全局 Less 样式
