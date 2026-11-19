@@ -1,10 +1,4 @@
-import {
-  createRootRoute,
-  createRoute,
-  lazyRouteComponent,
-  // notFound,
-  redirect,
-} from '@tanstack/react-router';
+import { createRootRoute, createRoute, lazyRouteComponent, redirect } from '@tanstack/react-router';
 
 import { WorkbaseLayout } from '@/layout';
 import { NotFoundPage, RouteErrorPage } from '@/router/RouteFeedback';
@@ -20,18 +14,18 @@ const appRoute = createRoute({
   component: WorkbaseLayout,
 });
 
-const homeRoute = createRoute({
-  getParentRoute: () => appRoute,
+const indexRoute = createRoute({
+  getParentRoute: () => rootRoute,
   path: '/',
-  component: lazyRouteComponent(() => import('@/pages/workbench'), 'WorkbenchPage'),
+  beforeLoad: () => {
+    throw redirect({ to: '/welcome', replace: true });
+  },
 });
 
 const welcomeRoute = createRoute({
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => appRoute,
   path: '/welcome',
-  beforeLoad: () => {
-    throw redirect({ to: '/', replace: true });
-  },
+  component: lazyRouteComponent(() => import('@/pages/welcome'), 'WorkbenchPage'),
 });
 
 const loginRoute = createRoute({
@@ -46,14 +40,8 @@ const richTextEditorRoute = createRoute({
   component: lazyRouteComponent(() => import('@/pages/rich-text-editor'), 'RichTextEditorPage'),
 });
 
-const resourcesRoute = createRoute({
-  getParentRoute: () => appRoute,
-  path: '/resources',
-  component: lazyRouteComponent(() => import('@/pages/welcome')),
-});
-
 export const routeTree = rootRoute.addChildren([
-  appRoute.addChildren([homeRoute, richTextEditorRoute, resourcesRoute]),
-  welcomeRoute,
+  indexRoute,
+  appRoute.addChildren([welcomeRoute, richTextEditorRoute]),
   loginRoute,
 ]);

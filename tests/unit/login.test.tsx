@@ -46,6 +46,7 @@ test('64 字符账号可提交，等待结果时重复点击只保存一次', as
   await user.click(screen.getByRole('checkbox', { name: '记住账号' }));
 
   const submit = screen.getByRole('button', { name: submitButtonName });
+  save.mockClear();
   vi.useFakeTimers();
   try {
     fireEvent.click(submit);

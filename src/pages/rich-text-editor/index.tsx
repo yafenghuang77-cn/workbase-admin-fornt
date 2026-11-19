@@ -64,7 +64,6 @@ const DemoLayout = ({ children }: { children: ReactNode }) => {
 export const RichTextEditorPage = () => {
   const [form] = Form.useForm<ArticleValues>();
   const body = Form.useWatch<RichTextValue>('body', form);
-  const [dark, setDark] = useState(false);
   const [disabled, setDisabled] = useState(false);
   const [uploads] = useState(createMockUploads);
 
@@ -77,9 +76,6 @@ export const RichTextEditorPage = () => {
         content="在此体验排版、图片、视频、附件与实时预览。"
         breadcrumbRender={false}
         extra={[
-          <Button key="theme" htmlType="button" onClick={() => setDark((current) => !current)}>
-            {dark ? '浅色模式' : '深色模式'}
-          </Button>,
           <Button
             key="disable"
             htmlType="button"

@@ -13,6 +13,7 @@ test('生产构建在部署子路径启动，加载 Gzip 脚本并支持登录�
   );
 
   await page.goto('./');
+  await expect(page).toHaveURL(/\/workbase\/welcome$/u);
   await expect(page.getByRole('heading', { name: '工作台' })).toBeVisible();
   await gzipScript;
 
@@ -32,7 +33,7 @@ test('懒加载失败时显示错误页，可返回首页并在资源恢复后�
 
   await expect(page.getByText('页面加载失败', { exact: true })).toBeVisible();
   await page.getByRole('link', { name: '返回首页' }).click();
-  await expect(page).toHaveURL(/\/workbase\/$/u);
+  await expect(page).toHaveURL(/\/workbase\/welcome$/u);
   await expect(page.getByRole('heading', { name: '工作台' })).toBeVisible();
 
   await page.unroute(loginChunk);

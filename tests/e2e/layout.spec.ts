@@ -39,7 +39,7 @@ test('手机布局无页面横向溢出，支持抽屉导航', async ({ page }, 
   });
   await page.getByRole('img', { name: 'menu', exact: true }).click();
   await page.getByRole('menuitem', { name: /开发资源/u }).click();
-  await expect(page.getByRole('link', { name: /欢迎与资源/u })).toBeVisible();
+  await expect(page.getByRole('link', { name: /富文本编辑器/u })).toBeVisible();
 });
 
 for (const viewport of [
@@ -96,13 +96,15 @@ test('树形菜单支持展开收起、路由定位与折叠浮层导航', async
       .getByRole('menuitem')
       .filter({ has: page.getByRole('link', { name: '富文本编辑器', exact: true }) }),
   ).toHaveClass(/ant-menu-item-selected/u);
+  await page.getByRole('link', { name: 'Workbase', exact: true }).click();
+  await expect(page).toHaveURL(/\/workbase\/welcome$/u);
   await page.getByRole('button', { name: '收起导航' }).click();
   await page
     .getByRole('menuitem')
     .filter({ has: page.getByRole('img', { name: 'bar-chart', exact: true }) })
     .hover();
-  await page.getByRole('link', { name: '欢迎与资源', exact: true }).click();
-  await expect(page).toHaveURL(/\/resources$/u);
+  await page.getByRole('link', { name: '富文本编辑器', exact: true }).click();
+  await expect(page).toHaveURL(/\/workbase\/rich-text-editor$/u);
   await page.getByRole('button', { name: '展开导航' }).click();
   await expect(page.getByRole('menuitem', { name: /开发资源/u })).toHaveAttribute(
     'aria-expanded',

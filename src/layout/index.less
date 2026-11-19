@@ -1,8 +1,6 @@
 .workbase-layout {
   --workbase-header-height: 56px;
   --workbase-content-padding: 12px;
-  --workbase-sidebar-start: #103e9f;
-  --workbase-sidebar-end: #092e78;
 
   height: 100dvh;
   overflow: hidden;
@@ -22,21 +20,21 @@
     padding: 0;
   }
 
-  .ant-pro-layout .ant-layout-sider.ant-pro-sider {
-    background: linear-gradient(165deg, var(--workbase-sidebar-start), var(--workbase-sidebar-end));
+  .ant-pro-global-header {
+    border-bottom: 1px solid var(--ant-color-border-secondary);
   }
 
+  // ProLayout 没有提供品牌区域尺寸与字体 Token，保留原有视觉规格。
   .ant-pro-sider .ant-pro-sider-logo {
+    flex-shrink: 0;
     height: var(--workbase-header-height);
     padding: 8px;
     margin-bottom: 12px;
-    border-bottom: 1px solid rgb(255 255 255 / 9%);
   }
 
   .ant-pro-sider .workbase-brand h1 {
     height: auto;
     margin: 0;
-    color: #fff;
     font-size: 18px;
     font-weight: 650;
     line-height: 32px;
@@ -48,7 +46,6 @@
 
   .ant-pro-sider-menu .ant-menu-sub {
     padding-block: 4px;
-    border-radius: 6px;
   }
 
   .ant-pro-sider-menu .ant-menu-sub .ant-menu-item {
@@ -58,17 +55,19 @@
   .ant-pro-sider-menu .ant-menu-item-selected {
     font-weight: 600;
   }
-
-  .ant-pro-global-header {
-    border-bottom: 1px solid #efefef;
-  }
 }
 
 .workbase-brand {
   display: flex;
   gap: 10px;
   align-items: center;
-  color: #fff;
+  color: inherit;
+}
+
+.workbase-menu-label {
+  display: inline-flex;
+  gap: var(--ant-margin-xs);
+  align-items: center;
 }
 
 .workbase-logo {
@@ -79,8 +78,8 @@
   width: 32px;
   height: 32px;
   border-radius: 9px;
-  background: #fff;
-  color: #0958d9;
+  background: var(--ant-color-bg-container);
+  color: var(--ant-color-primary);
 }
 
 .workbase-header-title,
@@ -105,7 +104,7 @@
 }
 
 .workbase-avatar {
-  background: #1677ff;
+  background: var(--ant-color-primary);
 }
 
 .workbase-content {
@@ -114,7 +113,6 @@
   min-height: 0;
   overflow: hidden auto;
   overscroll-behavior-y: contain;
-  padding: var(--workbase-content-padding);
 }
 
 .workbase-skip-link {
@@ -123,7 +121,7 @@
   top: -60px;
   left: 12px;
   padding: 12px;
-  background: #fff;
+  background: var(--ant-color-bg-container);
 
   &:focus {
     top: 8px;
@@ -139,8 +137,8 @@
   flex-shrink: 0;
   height: var(--workbase-header-height);
   padding-inline: 16px var(--workbase-content-padding);
-  border-bottom: 1px solid #efefef;
-  background: #fff;
+  border-bottom: 1px solid var(--ant-color-border-secondary);
+  background: var(--ant-color-bg-container);
 }
 
 .workbase-mobile-header {
@@ -151,10 +149,6 @@
 }
 
 @media (max-width: 767px) {
-  .workbase-layout {
-    --workbase-content-padding: 16px;
-  }
-
   .workbase-search {
     width: 150px;
   }

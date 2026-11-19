@@ -5,11 +5,13 @@ import { MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons';
 import type { ProLayoutProps } from '@ant-design/pro-components';
 import { ProLayout } from '@ant-design/pro-components';
 import { Link, Outlet, useLocation } from '@tanstack/react-router';
-import { Breadcrumb, Button, ConfigProvider } from 'antd';
+import { Breadcrumb, Button } from 'antd';
+
+import { proLayoutTheme } from '@/providers/theme';
+import { useThemeSettings } from '@/providers/theme-settings';
 
 import { HeaderActions } from './HeaderActions';
 import { navigation, navigationLinks } from './navigation';
-import { layoutTheme } from './theme';
 
 import './index.less';
 
@@ -39,7 +41,7 @@ const LayoutHeader = ({
       />
       <Breadcrumb
         items={[
-          { title: <Link to="/">首页</Link> },
+          { title: <Link to="/welcome">首页</Link> },
           ...(parent ? [{ title: parent.name }] : []),
           { title: current?.name ?? '工作台' },
         ]}
@@ -49,10 +51,21 @@ const LayoutHeader = ({
 };
 
 const renderMenuItem: NonNullable<ProLayoutProps['menuItemRender']> = (item, dom) => (
-  <Link to={item.path ?? '/'}>{dom}</Link>
+  <Link to={item.path ?? '/welcome'}>{dom}</Link>
 );
+const renderMenuText: NonNullable<ProLayoutProps['menuTextRender']> = (item, text) => {
+  // ProLayout 已渲染顶层图标，仅补充被默认省略的子级图标。
+  if (!item.icon || navigation.some((root) => root.path === item.path)) return text;
+
+  return (
+    <span className="workbase-menu-label">
+      <span aria-hidden="true">{item.icon}</span>
+      <span>{text}</span>
+    </span>
+  );
+};
 const renderMenuHeader: NonNullable<ProLayoutProps['menuHeaderRender']> = (logo, title) => (
-  <Link to="/" className="workbase-brand">
+  <Link to="/welcome" className="workbase-brand">
     {logo}
     {title}
   </Link>
@@ -65,80 +78,64 @@ const renderHeaderContent: NonNullable<ProLayoutProps['headerContentRender']> = 
 
 /** 公共管理端框架；页面通过 children 或路由 Outlet 接入。 */
 export const WorkbaseLayout = ({ children }: PropsWithChildren) => {
+  const { settings } = useThemeSettings();
   const [collapsed, setCollapsed] = useState(() => window.matchMedia('(max-width: 767px)').matches);
   const path = useAppPath();
 
   return (
-    <ConfigProvider theme={layoutTheme}>
-      <div className="workbase-layout">
-        <a className="workbase-skip-link" href="#workbase-content">
-          跳转到内容
-        </a>
-        <ProLayout
-          title="Workbase"
-          logo={
-            <span className="workbase-logo" aria-hidden="true">
-              <svg viewBox="0 0 40 40" width="24" height="24" fill="none">
-                <path
-                  d="M7 8 13 31 20 17 27 31 33 8"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </span>
-          }
-          layout="side"
-          siderWidth={240}
-          fixedHeader
-          fixSiderbar
-          collapsed={collapsed}
-          onCollapse={setCollapsed}
-          collapsedButtonRender={false}
-          siderMenuType="sub"
-          menu={{ locale: false, defaultOpenAll: false }}
-          menuProps={{
-            theme: 'dark',
-            inlineIndent: 16,
-            selectedKeys: [path],
-            onClick: () => {
-              if (window.matchMedia('(max-width: 767px)').matches) setCollapsed(true);
-            },
-          }}
-          route={{ routes: navigation }}
-          location={{ pathname: path }}
-          menuItemRender={renderMenuItem}
-          menuHeaderRender={renderMenuHeader}
-          headerContentRender={renderHeaderContent}
-          token={{
-            bgLayout: '#f5f5f5',
-            header: { colorBgHeader: '#fff', colorBgScrollHeader: '#fff', heightLayoutHeader: 56 },
-            sider: {
-              colorMenuBackground: '#0d3da4',
-              colorMenuItemDivider: 'transparent',
-              colorTextMenuTitle: '#fff',
-              colorTextMenu: '#dce7ff',
-              colorTextMenuSecondary: '#a9c1ef',
-              colorBgMenuItemSelected: '#0958d9',
-              colorTextMenuSelected: '#fff',
-              colorBgMenuItemHover: '#164fb0',
-              colorTextMenuItemHover: '#fff',
-              menuHeight: 40,
-              paddingInlineLayoutMenu: 12,
-              paddingBlockLayoutMenu: 4,
-            },
-          }}
-        >
-          <header className="workbase-desktop-header">
-            <LayoutHeader collapsed={collapsed} onCollapse={setCollapsed} />
-            <HeaderActions />
-          </header>
-          <div id="workbase-content" className="workbase-content" tabIndex={-1}>
-            {children ?? <Outlet />}
-          </div>
-        </ProLayout>
-      </div>
-    </ConfigProvider>
+    <div className="workbase-layout">
+      <a className="workbase-skip-link" href="#workbase-content">
+        跳转到内容
+      </a>
+      <ProLayout
+        navTheme={settings.navTheme}
+        colorPrimary={settings.colorPrimary}
+        title="Workbase"
+        logo={
+          <span className="workbase-logo" aria-hidden="true">
+            <svg viewBox="0 0 40 40" width="24" height="24" fill="none">
+              <path
+                d="M7 8 13 31 20 17 27 31 33 8"
+                stroke="currentColor"
+                strokeWidth="4"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </span>
+        }
+        layout="side"
+        siderWidth={240}
+        fixedHeader
+        fixSiderbar
+        collapsed={collapsed}
+        onCollapse={setCollapsed}
+        collapsedButtonRender={false}
+        siderMenuType="sub"
+        menu={{ locale: false, defaultOpenAll: false }}
+        menuProps={{
+          inlineIndent: 16,
+          selectedKeys: [path],
+          onClick: () => {
+            if (window.matchMedia('(max-width: 767px)').matches) setCollapsed(true);
+          },
+        }}
+        route={{ routes: navigation }}
+        location={{ pathname: path }}
+        menuItemRender={renderMenuItem}
+        menuTextRender={renderMenuText}
+        menuHeaderRender={renderMenuHeader}
+        headerContentRender={renderHeaderContent}
+        token={proLayoutTheme}
+      >
+        <header className="workbase-desktop-header">
+          <LayoutHeader collapsed={collapsed} onCollapse={setCollapsed} />
+          <HeaderActions />
+        </header>
+        <div id="workbase-content" className="workbase-content" tabIndex={-1}>
+          {children ?? <Outlet />}
+        </div>
+      </ProLayout>
+    </div>
   );
 };

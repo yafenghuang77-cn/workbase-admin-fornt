@@ -7,7 +7,7 @@ export const NotFoundPage = () => {
       status="404"
       title="404"
       subTitle="抱歉，你访问的页面不存在。"
-      extra={<Link to="/">返回首页</Link>}
+      extra={<Link to="/welcome">返回首页</Link>}
     />
   );
 };
@@ -19,5 +19,5 @@ export const RouteErrorPage = () => {
     subTitle: '请刷新页面后重试。',
   };
 
-  return <Result {...feedback} extra={<Link to="/">返回首页</Link>} />;
+  return <Result {...feedback} extra={<Link to="/welcome">返回首页</Link>} />;
 };

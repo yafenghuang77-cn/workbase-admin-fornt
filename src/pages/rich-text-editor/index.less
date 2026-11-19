@@ -1,7 +1,4 @@
 .rich-text-demo {
-  min-height: 100vh;
-  padding: 16px;
-
   &__columns {
     display: grid;
     grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
@@ -25,8 +22,6 @@
   }
 
   @media (max-width: 1024px) {
-    padding: 0;
-
     &__columns {
       grid-template-columns: minmax(0, 1fr);
     }

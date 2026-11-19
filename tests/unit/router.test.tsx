@@ -18,57 +18,58 @@ const renderRoute = (pathname: string) => {
   return { history };
 };
 
-test('部署首页显示工作台和公共导航', async () => {
-  renderRoute('/workbase/');
-  expect(await screen.findByRole('heading', { name: '工作台' }, { timeout: 8000 })).toBeVisible();
+test('部署根路径重定向到工作台首页并替换当前历史记录', async () => {
+  const { history } = renderRoute('/workbase/');
+
+  expect(await screen.findByRole('button', { name: '新建任务' }, { timeout: 8000 })).toBeVisible();
+  expect(history.location.pathname).toBe('/workbase/welcome');
+  expect(history.canGoBack()).toBe(false);
+});
+
+test('直达工作台首页时显示公共导航', async () => {
+  const { history } = renderRoute('/workbase/welcome');
+
+  expect(await screen.findByRole('button', { name: '新建任务' }, { timeout: 8000 })).toBeVisible();
+  expect(history.location.pathname).toBe('/workbase/welcome');
+  expect(screen.getByRole('link', { name: '首页' })).toHaveAttribute('href', '/workbase/welcome');
   expect(screen.getByRole('menuitem', { name: /开发资源/u })).toHaveAttribute(
     'aria-expanded',
     'false',
   );
 });
 
-test('学习资源保留在资源页面', async () => {
-  renderRoute('/workbase/resources');
-  expect(await screen.findByRole('heading', { name: '欢迎使用 Workbase' })).toBeVisible();
-  expect(screen.getByRole('link', { name: /Ant Design 官方文档/u })).toHaveAttribute(
-    'href',
-    'https://ant.design/index-cn',
-  );
-});
-
 test('导航支持折叠和子菜单跳转', async () => {
   const user = userEvent.setup();
-  const { history } = renderRoute('/workbase/');
+  const { history } = renderRoute('/workbase/welcome');
   await user.click(await screen.findByRole('button', { name: '收起导航' }));
   expect(screen.getByRole('button', { name: '展开导航' })).toHaveAttribute(
     'aria-expanded',
     'false',
   );
   await user.click(screen.getByRole('button', { name: '展开导航' }));
+  const workbenchLink = screen.getByRole('link', { name: /工作台/u });
+  expect(workbenchLink).toHaveAttribute('href', '/workbase/welcome');
+  expect(within(workbenchLink).getAllByRole('img', { name: 'home' })).toHaveLength(1);
   await user.click(screen.getByRole('menuitem', { name: /开发资源/u }));
-  await user.click(await screen.findByRole('link', { name: /欢迎与资源/u }));
-  await waitFor(() => expect(history.location.pathname).toBe('/workbase/resources'));
+  const editorLink = await screen.findByRole('link', { name: /富文本编辑器/u });
+  await waitFor(() => expect(within(editorLink).getByRole('img', { hidden: true })).toBeVisible());
+  await user.click(editorLink);
+  await waitFor(() => expect(history.location.pathname).toBe('/workbase/rich-text-editor'));
   expect(screen.getByRole('menuitem', { name: /开发资源/u })).toHaveAttribute(
     'aria-expanded',
     'true',
   );
+  await user.click(screen.getByRole('link', { name: /工作台/u }));
+  await waitFor(() => expect(history.location.pathname).toBe('/workbase/welcome'));
 });
 
 test('工作台可创建演示任务', { timeout: 12000 }, async () => {
   const user = userEvent.setup();
-  renderRoute('/workbase/');
+  renderRoute('/workbase/welcome');
   await user.click(await screen.findByRole('button', { name: '新建任务' }, { timeout: 8000 }));
   await user.type(screen.getByRole('textbox', { name: '任务名称' }), '布局验收');
   await user.click(screen.getByRole('button', { name: '保 存' }));
   expect(await screen.findByRole('cell', { name: '布局验收' })).toBeVisible();
-});
-
-test('旧欢迎地址重定向到部署首页并替换当前历史记录', async () => {
-  const { history } = renderRoute('/workbase/welcome');
-
-  expect(await screen.findByRole('heading', { name: '工作台' }, { timeout: 8000 })).toBeVisible();
-  expect(history.location.pathname).toBe('/workbase/');
-  expect(history.canGoBack()).toBe(false);
 });
 
 test('从不存在的页面按提示返回部署首页', async () => {
@@ -77,10 +78,10 @@ test('从不存在的页面按提示返回部署首页', async () => {
 
   expect(await screen.findByText('抱歉，你访问的页面不存在。')).toBeVisible();
   const homeLink = screen.getByRole('link', { name: '返回首页' });
-  expect(homeLink).toHaveAttribute('href', '/workbase/');
+  expect(homeLink).toHaveAttribute('href', '/workbase/welcome');
   await user.click(homeLink);
 
-  expect(await screen.findByRole('heading', { name: '工作台' }, { timeout: 8000 })).toBeVisible();
+  expect(await screen.findByRole('button', { name: '新建任务' }, { timeout: 8000 })).toBeVisible();
 });
 
 test('登录路由可以直接打开登录表单', async () => {

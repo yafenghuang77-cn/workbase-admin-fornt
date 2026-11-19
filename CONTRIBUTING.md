@@ -10,7 +10,7 @@
 
 本次核对的核心安装版本为 React 19.3.1、Vite 8.3.5、antd 6.6.8、`@ant-design/pro-components` 3.1.15-8、TanStack Query 5.105.0 和 TanStack Router 1.170.46。这里记录的是扫描快照；后续开发使用 `pnpm list --depth 0` 重新确认，尤其不要将 ProComponents 2.x 示例直接套到当前 3.x 预发布版本。
 
-- 当前定义了独立欢迎页、Tiptap 富文本演示和登录占位页。应用已接入 React Compiler、TanStack Router 集中式代码路由及 antd 应用级主题与反馈上下文。
+- 当前定义了工作台首页、Tiptap 富文本演示和登录占位页。应用已接入 React Compiler、TanStack Router 集中式代码路由及 antd 应用级主题与反馈上下文。
 - 统一 Axios 请求层、共享 QueryClient、登录认证、业务权限和监控初始化尚待接入。开发入口仍渲染 Query Devtools，缺少 QueryClient 时会报 `No QueryClient set`。
 - Tailwind、Orval 和 MSW 等依赖按场景接入。当前已接入 Vitest 规范回归、组件和单元测试，以及 Playwright 浏览器测试。
 - Vite 使用 `/workbase/` 基础路径，开发端口为 `8888`，API 代理目标为 `http://127.0.0.1:9999`，构建目录为 `workbase/`。启动、环境和 Gzip 部署要求见 [README.md](./README.md)。
@@ -23,8 +23,8 @@
 
 在 `src/router/routes.ts` 使用 TanStack Router 的 `createRootRoute` / `createRoute` 集中定义路由，通过 `addChildren` 组装路由树；页面组件放在 `src/pages` 对应目录，无需为每个页面新增路由文件。[TanStack Router 代码路由](https://tanstack.com/router/latest/docs/routing/code-based-routing)
 
-- 根路由配置 404 和路由错误反馈，`/` 绑定首页。
-- `/welcome` 使用 `beforeLoad` 和 `redirect` 处理旧地址。
+- 根路由配置 404 和路由错误反馈，`/` 使用 `beforeLoad` 和 `redirect` 跳转到 `/welcome`。
+- `/welcome` 按需加载工作台首页，通过公共布局展示导航。
 - `/rich-text-editor` 和 `/login` 使用 `lazyRouteComponent` 按需加载页面。
 - 路由路径使用应用内路径，部署前缀由 `src/router/index.ts` 中 `createRouter` 的 `basepath` 统一处理。
 
@@ -43,7 +43,7 @@
 | 详情、数据卡片、业务列表       | `ProDescriptions`、`ProCard`、`ProList`           | 核对当前版本导出与弃用信息，避免沿用旧示例                   |
 | 按钮、选择、弹窗、反馈、上传等 | antd 对应组件                                     | 使用公开 API、Token 与语义样式；图标优先 `@ant-design/icons` |
 
-- 首次实现页面时按需接入 `ConfigProvider` 和 antd `App` 上下文，统一主题、语言与反馈入口，避免每页重复配置。
+- `ConfigProvider` 和 antd `App` 上下文统一在 `AppProviders` 中接入，集中配置主题、语言与反馈入口；页面和布局不再创建 `ConfigProvider`。
 - ProComponents 与 antd 可组合使用；只有现有组件确实不能满足交互、可访问性或性能要求时，才实现局部自定义能力，并在交付说明中解释缺口。
 - 表单优先沿用 ProForm / antd Form 的状态与校验。同一个表单不要再由 React Hook Form 管理第二份值；仅在明确需要独立表单引擎的场景使用已有 `react-hook-form`、`@hookform/resolvers` 和 Zod。
 - 服务端数据统一由 TanStack Query 管理。表格筛选、分页和排序进入查询参数与 queryKey；默认将 Query 结果以受控数据传入 ProTable，不让 ProTable 的自动请求和 `useQuery` 同时请求同一数据。使用 `request` 适配时需明确单一请求入口与刷新策略，写操作走 Mutation，并精准失效缓存。

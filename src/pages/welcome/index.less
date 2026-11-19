@@ -1,105 +1,132 @@
-.welcome-page {
-  display: grid;
-  gap: var(--ant-margin-lg);
-  max-width: 1280px;
-  margin-inline: auto;
-  padding: clamp(16px, 4vw, 48px);
-  color: var(--ant-color-text);
-}
+.workbench {
+  --workbench-secondary-text: var(--ant-color-text-secondary);
+  --workbench-surface-radius: 8px;
+  --workbench-surface-shadow: var(--ant-box-shadow-tertiary);
 
-.welcome-intro {
-  padding: 12px 0 4px;
+  .ant-page-header {
+    padding: 0 0 10px;
+  }
 
-  @media (max-width: 575px) {
-    padding-top: 0;
+  .ant-page-header-heading {
+    align-items: flex-start;
+  }
+
+  .ant-page-header-heading-left,
+  .ant-page-header-heading-extra {
+    margin-block: 0;
+  }
+
+  .ant-page-header-content {
+    padding-top: 4px;
+    color: var(--workbench-secondary-text);
+    line-height: 22px;
   }
 }
 
-.welcome-eyebrow {
-  margin: 0 0 12px;
-  color: var(--ant-color-primary);
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 1px;
-}
-
-.welcome-heading {
-  margin: 0 0 12px;
-  font-size: clamp(24px, 3vw, 32px);
-  font-weight: 600;
-  line-height: 1.4;
-}
-
-.welcome-description {
+.workbench-title {
   margin: 0;
-  color: var(--ant-color-text-secondary);
-  line-height: 1.8;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 32px;
 }
 
-.welcome-resources {
+.workbench-statistics {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 16px;
-
-  @media (max-width: 1100px) {
-    grid-template-columns: 1fr;
-  }
+  margin-bottom: 16px;
 }
 
-.welcome-resource-link {
-  display: block;
-  border-radius: var(--ant-border-radius-lg);
-  color: inherit;
-
-  &:focus-visible {
-    outline: 2px solid var(--ant-color-primary);
-    outline-offset: 4px;
-  }
+.workbench-statistic,
+.workbench-tasks {
+  overflow: hidden;
+  border-radius: var(--workbench-surface-radius);
+  box-shadow: var(--workbench-surface-shadow);
 }
 
-.welcome-resource {
-  height: 100%;
+.workbench-statistic-body {
+  padding: 24px;
 }
 
-.welcome-resource-body {
+.workbench-statistic-content {
   display: flex;
-  align-items: flex-start;
   gap: 16px;
+  align-items: center;
+  min-height: 72px;
 }
 
-.welcome-resource-number {
-  display: flex;
-  flex: 0 0 40px;
+.workbench-statistic-icon {
+  display: inline-flex;
+  flex-shrink: 0;
   align-items: center;
   justify-content: center;
-  height: 40px;
-  border-radius: var(--ant-border-radius-lg);
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
   background: var(--ant-color-primary-bg);
   color: var(--ant-color-primary);
-  font-size: 16px;
+  font-size: 20px;
+}
+
+.workbench-statistic-value {
+  font-size: 24px;
   font-weight: 600;
+  line-height: 30px;
 }
 
-.welcome-resource-copy {
-  min-width: 0;
+.workbench-statistic-label {
+  color: var(--workbench-secondary-text);
+  font-size: 14px;
+  line-height: 22px;
 }
 
-.welcome-resource-title {
-  margin: 0 0 8px;
-  font-size: 16px;
-  font-weight: 600;
+.workbench-comparison {
+  margin-top: 2px;
+  color: var(--ant-color-success-text);
+  font-size: 12px;
+  line-height: 18px;
 }
 
-.welcome-resource-description {
-  margin: 0;
-  color: var(--ant-color-text-secondary);
-  font-size: 13px;
-  line-height: 1.8;
+.workbench-comparison-negative {
+  color: var(--ant-color-error-text);
 }
 
-.welcome-resource-arrow {
-  flex-shrink: 0;
-  margin-top: 4px;
-  color: var(--ant-color-text-secondary);
-  transform: rotate(45deg);
+.workbench-tasks .workbench-tasks-body {
+  padding: 0;
+}
+
+.workbench-task-actions {
+  display: flex;
+  gap: 12px;
+
+  .ant-btn {
+    height: 22px;
+    padding: 0;
+    line-height: 22px;
+  }
+}
+
+.workbench-task-muted {
+  color: var(--workbench-secondary-text);
+}
+
+@media (max-width: 1199px) {
+  .workbench-statistics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 575px) {
+  .workbench-statistics {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .workbench .ant-page-header-heading {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+}
+
+.workbench .workbench-task-status {
+  line-height: 18px;
 }
