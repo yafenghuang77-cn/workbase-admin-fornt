@@ -1,6 +1,12 @@
 import type { ReactNode } from 'react';
 
-import { BarChartOutlined, FileTextOutlined, HomeOutlined } from '@ant-design/icons';
+import {
+  BarChartOutlined,
+  FileTextOutlined,
+  FormOutlined,
+  HomeOutlined,
+  UnorderedListOutlined,
+} from '@ant-design/icons';
 
 interface NavigationItem {
   name: string;
@@ -13,6 +19,13 @@ interface NavigationItem {
 
 export const navigation: NavigationItem[] = [
   { key: '/welcome', path: '/welcome', name: '工作台', icon: <HomeOutlined /> },
+  {
+    name: '问卷管理',
+    key: 'questionnaires',
+    path: '/questionnaires',
+    icon: <FormOutlined />,
+    children: [{ path: '/questionnaires/list', name: '问卷列表', icon: <UnorderedListOutlined /> }],
+  },
   {
     name: '开发资源',
     key: 'resources',

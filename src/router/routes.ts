@@ -40,8 +40,14 @@ const richTextEditorRoute = createRoute({
   component: lazyRouteComponent(() => import('@/pages/rich-text-editor'), 'RichTextEditorPage'),
 });
 
+const questionnaireListRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/questionnaires/list',
+  component: lazyRouteComponent(() => import('@/pages/questionnaires'), 'QuestionnaireListPage'),
+});
+
 export const routeTree = rootRoute.addChildren([
   indexRoute,
-  appRoute.addChildren([welcomeRoute, richTextEditorRoute]),
+  appRoute.addChildren([welcomeRoute, richTextEditorRoute, questionnaireListRoute]),
   loginRoute,
 ]);

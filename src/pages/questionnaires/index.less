@@ -1,0 +1,137 @@
+.questionnaire-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+
+  > .ant-pro-page-container-warp {
+    flex-shrink: 0;
+  }
+
+  .ant-pro-grid-content,
+  .ant-pro-grid-content-children,
+  .ant-pro-page-container-children-container {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .ant-pro-page-container-children-container {
+    padding-bottom: var(--ant-padding);
+  }
+
+  .ant-pro-page-container-warp-page-header {
+    padding-block: var(--ant-padding-sm);
+  }
+
+  .ant-page-header-heading-title {
+    font-size: var(--ant-font-size-heading-4);
+  }
+}
+
+.questionnaire-table {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+
+  > .ant-pro-table-search {
+    flex-shrink: 0;
+    max-height: 48%;
+    overflow: auto;
+    border: 1px solid var(--ant-color-border-secondary);
+    border-radius: var(--ant-border-radius-lg);
+    box-shadow: none;
+  }
+
+  .questionnaire-table__search {
+    padding: 0;
+
+    .ant-pro-query-filter {
+      padding: var(--ant-padding) var(--ant-padding-lg);
+    }
+
+    .ant-form-item-label > label {
+      color: var(--ant-color-text-secondary);
+      font-size: var(--ant-font-size);
+    }
+
+    .ant-form-item {
+      margin-bottom: 0;
+    }
+
+    .ant-picker-range {
+      width: 100%;
+    }
+  }
+
+  .questionnaire-table__card {
+    border: 1px solid var(--ant-color-border-secondary);
+    box-shadow: none;
+  }
+
+  .questionnaire-table__count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 28px;
+    height: 22px;
+    padding-inline: var(--ant-padding-xs);
+    border-radius: var(--ant-border-radius-sm);
+    background: var(--ant-color-fill-tertiary);
+    color: var(--ant-color-text-secondary);
+    font-size: var(--ant-font-size-sm);
+    font-weight: 400;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .questionnaire-table__id,
+  .questionnaire-table__date {
+    color: var(--ant-color-text-secondary);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .questionnaire-table__name {
+    font-weight: 500;
+  }
+
+  .questionnaire-table__action {
+    padding-inline: 4px;
+  }
+
+  .questionnaire-table__card,
+  .questionnaire-table__card-body,
+  .ant-table-wrapper,
+  .ant-table-wrapper > .ant-spin,
+  .ant-spin-nested-loading,
+  .ant-spin-container,
+  .ant-table,
+  .ant-table-container {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .ant-pro-table-list-toolbar,
+  .ant-table-header,
+  .ant-table-pagination {
+    flex-shrink: 0;
+  }
+
+  .ant-table-pagination.ant-pagination {
+    width: 100%;
+    padding-top: var(--ant-padding);
+    margin: 0;
+    border-top: 1px solid var(--ant-color-border-secondary);
+  }
+
+  // scroll.y 开启固定表头；Flex 将剩余高度分配给数据区，不依赖视口高度常量。
+  .ant-table-body {
+    flex: 1;
+    min-height: 0;
+    overscroll-behavior: contain;
+  }
+}
