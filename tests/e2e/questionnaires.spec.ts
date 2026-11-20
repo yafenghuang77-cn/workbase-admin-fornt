@@ -1,5 +1,27 @@
 import { expect, test } from '@playwright/test';
 
+test('新增问卷进入独立全屏空白页，刷新和后退可用', async ({ page }) => {
+  await page.goto('questionnaires/list');
+  await page.getByRole('button', { name: '新增问卷' }).click();
+  await expect(page).toHaveURL(/\/workbase\/questionnaires\/create$/u);
+  for (const reload of [false, true]) {
+    if (reload) await page.reload();
+    const main = page.getByRole('main', { name: '新增问卷' });
+    await expect(main).toBeVisible();
+    await expect(main).toBeEmpty();
+    await expect(page.locator('.workbase-layout')).toHaveCount(0);
+    expect(await main.boundingBox()).toEqual({
+      x: 0,
+      y: 0,
+      width: page.viewportSize()?.width,
+      height: page.viewportSize()?.height,
+    });
+  }
+  await page.goBack();
+  await expect(page).toHaveURL(/\/workbase\/questionnaires\/list$/u);
+  await expect(page.getByRole('button', { name: '新增问卷' })).toBeVisible();
+});
+
 test('问卷菜单支持跳转，列表支持搜索、重置、分页', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
@@ -177,8 +199,6 @@ test('列表填满剩余内容，数据区独立滚动且左右列固定', async
 
 test('问卷按状态最多显示三个操作入口，更多菜单保留原有操作提示', async ({ page }) => {
   await page.goto('questionnaires/list');
-  await page.getByRole('button', { name: '新增问卷' }).click();
-  await expect(page.getByText('新增问卷功能暂未实现')).toBeVisible();
   for (const { id, actions } of [
     { id: 'WJ0001', actions: ['详情', '预览', '下线'] },
     { id: 'WJ0002', actions: ['编辑', '详情', '删除', '预览', '上线'] },

@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { EllipsisOutlined, PlusOutlined } from '@ant-design/icons';
 import type { ProColumns } from '@ant-design/pro-components';
 import { PageContainer, ProTable } from '@ant-design/pro-components';
+import { useNavigate } from '@tanstack/react-router';
 import { App, Button, Dropdown, Space } from 'antd';
 
 import type { Questionnaire, QuestionnaireStatus } from './data';
@@ -32,6 +33,7 @@ const actionsByStatus: Record<QuestionnaireStatus, readonly string[]> = {
 };
 
 export const QuestionnaireListPage = () => {
+  const navigate = useNavigate();
   const { message } = App.useApp();
   const [filters, setFilters] = useState<SearchValues>({});
   const [current, setCurrent] = useState(1);
@@ -222,7 +224,11 @@ export const QuestionnaireListPage = () => {
             key="create"
             type="primary"
             icon={<PlusOutlined />}
-            onClick={() => showActionMessage('新增问卷')}
+            onClick={() => {
+              navigate({ to: '/questionnaires/create' }).catch(() => {
+                message.error('无法打开新增问卷页面，请重试');
+              });
+            }}
           >
             新增问卷
           </Button>,

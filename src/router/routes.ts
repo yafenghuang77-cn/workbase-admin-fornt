@@ -46,8 +46,18 @@ const questionnaireListRoute = createRoute({
   component: lazyRouteComponent(() => import('@/pages/questionnaires'), 'QuestionnaireListPage'),
 });
 
+const questionnaireCreateRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/questionnaires/create',
+  component: lazyRouteComponent(
+    () => import('@/pages/questionnaires/create'),
+    'QuestionnaireCreatePage',
+  ),
+});
+
 export const routeTree = rootRoute.addChildren([
   indexRoute,
   appRoute.addChildren([welcomeRoute, richTextEditorRoute, questionnaireListRoute]),
   loginRoute,
+  questionnaireCreateRoute,
 ]);
