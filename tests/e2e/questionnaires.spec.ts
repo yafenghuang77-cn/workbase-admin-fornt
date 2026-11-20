@@ -1,14 +1,17 @@
 import { expect, test } from '@playwright/test';
 
-test('新增问卷进入独立全屏空白页，刷新和后退可用', async ({ page }) => {
+test('新增问卷进入独立全屏设计页，未配置画布在刷新后仍为空', async ({ page }) => {
   await page.goto('questionnaires/list');
   await page.getByRole('button', { name: '新增问卷' }).click();
   await expect(page).toHaveURL(/\/workbase\/questionnaires\/create$/u);
   for (const reload of [false, true]) {
     if (reload) await page.reload();
-    const main = page.getByRole('main', { name: '新增问卷' });
+    const main = page.getByRole('main', { name: '问卷设计' });
+    const canvas = main.getByRole('region', { name: '问卷画布' });
     await expect(main).toBeVisible();
-    await expect(main).toBeEmpty();
+    await expect(canvas.getByRole('heading', { name: '暂无数据' })).toBeVisible();
+    await expect(canvas.getByText('0 道题')).toBeVisible();
+    await expect(main.getByRole('button', { name: '保存并返回' })).toBeDisabled();
     await expect(page.locator('.workbase-layout')).toHaveCount(0);
     expect(await main.boundingBox()).toEqual({
       x: 0,
@@ -20,6 +23,37 @@ test('新增问卷进入独立全屏空白页，刷新和后退可用', async ({
   await page.goBack();
   await expect(page).toHaveURL(/\/workbase\/questionnaires\/list$/u);
   await expect(page.getByRole('button', { name: '新增问卷' })).toBeVisible();
+});
+
+test('题型支持搜索和折叠，题库显示独立的未开放提示', async ({ page }) => {
+  await page.goto('questionnaires/create');
+  const palette = page.getByRole('complementary', { name: '组件库' });
+  const search = palette.getByRole('textbox', { name: '搜索题型' });
+
+  await palette.getByText('基础', { exact: true }).click();
+  await expect(palette.getByText('邮箱', { exact: true })).toBeHidden();
+  await search.fill('邮箱');
+  await expect(palette.getByText('邮箱', { exact: true })).toBeVisible();
+  await search.fill('nps');
+  await expect(palette.getByText('NPS', { exact: true })).toBeVisible();
+  await search.fill('不存在的题型');
+  await expect(palette.getByText('未找到匹配题型')).toBeVisible();
+  await palette.getByRole('tab', { name: '题库' }).click();
+  await expect(palette.getByText('题库暂未开放')).toBeVisible();
+  await expect(search).toBeHidden();
+  await page.getByRole('button', { name: '返回问卷列表' }).click();
+  await expect(page).toHaveURL(/\/workbase\/questionnaires\/list$/u);
+});
+
+test('窄屏优先显示画布且页面不会横向溢出', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('questionnaires/create');
+  const canvas = page.getByRole('region', { name: '问卷画布' });
+  const palette = page.getByRole('complementary', { name: '组件库' });
+
+  await expect(canvas.getByRole('heading', { name: '暂无数据' })).toBeInViewport();
+  expect((await canvas.boundingBox())?.y).toBeLessThan((await palette.boundingBox())?.y ?? 0);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(390);
 });
 
 test('问卷菜单支持跳转，列表支持搜索、重置、分页', async ({ page }) => {

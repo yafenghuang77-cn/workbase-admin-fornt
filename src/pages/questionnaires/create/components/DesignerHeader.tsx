@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useId } from 'react';
 
 import {
   ArrowLeftOutlined,
@@ -8,61 +8,45 @@ import {
   EyeOutlined,
   FileTextOutlined,
 } from '@ant-design/icons';
-import { useNavigate } from '@tanstack/react-router';
-import type { SegmentedProps } from 'antd';
-import { App, Button, Divider, Input, Segmented } from 'antd';
+import { Button, Input, Segmented } from 'antd';
 
-type DesignerView = 'content' | 'logic' | 'style';
-type DesignerMode = 'edit' | 'preview';
+interface DesignerHeaderProps {
+  onBack: () => void;
+}
 
-const viewOptions: SegmentedProps<DesignerView>['options'] = [
+const viewOptions = [
   { label: '内容', value: 'content', icon: <FileTextOutlined /> },
-  { label: '逻辑', value: 'logic', icon: <BranchesOutlined /> },
-  { label: '样式', value: 'style', icon: <BgColorsOutlined /> },
+  { label: '逻辑', value: 'logic', icon: <BranchesOutlined />, disabled: true },
+  { label: '样式', value: 'style', icon: <BgColorsOutlined />, disabled: true },
 ];
 
-const modeOptions: SegmentedProps<DesignerMode>['options'] = [
+const modeOptions = [
   { label: '编辑', value: 'edit', icon: <EditOutlined /> },
-  { label: '预览', value: 'preview', icon: <EyeOutlined /> },
+  { label: '预览', value: 'preview', icon: <EyeOutlined />, disabled: true },
 ];
 
-/** 顶栏：返回、问卷标题输入框、工作区与编辑模式切换。 */
-export const DesignerHeader = () => {
-  const navigate = useNavigate();
-  const { message } = App.useApp();
-  const [title, setTitle] = useState('访谈问卷');
-  const [view, setView] = useState<DesignerView>('content');
-  const [mode, setMode] = useState<DesignerMode>('edit');
+export const DesignerHeader = ({ onBack }: DesignerHeaderProps) => {
+  const titleId = useId();
 
   return (
     <header className="designer-header">
-      <Button
-        type="text"
-        icon={<ArrowLeftOutlined />}
-        onClick={() => {
-          navigate({ to: '/questionnaires/list' }).catch(() => {
-            message.error('无法返回问卷列表，请重试');
-          });
-        }}
-      >
-        返回项目详情
-      </Button>
-      <Divider type="vertical" />
-      <Input
-        className="designer-header__title"
-        aria-label="问卷标题"
-        value={title}
-        onChange={(event) => setTitle(event.target.value)}
-      />
-      <div className="designer-header__spacer" />
-      <Segmented
-        className="designer-header__modes"
-        value={view}
-        options={viewOptions}
-        onChange={(value) => setView(value)}
-      />
-      <Divider type="vertical" />
-      <Segmented value={mode} options={modeOptions} onChange={(value) => setMode(value)} />
+      <div className="designer-header__identity">
+        <Button
+          className="designer-header__back"
+          type="text"
+          icon={<ArrowLeftOutlined />}
+          onClick={onBack}
+        >
+          返回问卷列表
+        </Button>
+        <div className="designer-header__title-field">
+          <Input id={titleId} aria-label="问卷名称" placeholder="未命名问卷" />
+        </div>
+      </div>
+      <div className="designer-header__navigation">
+        <Segmented aria-label="工作区" value="content" options={viewOptions} />
+        <Segmented aria-label="设计模式" value="edit" options={modeOptions} />
+      </div>
     </header>
   );
 };
