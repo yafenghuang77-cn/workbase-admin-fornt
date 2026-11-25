@@ -30,14 +30,19 @@ test('题型默认折叠，支持展开收起与搜索，题库显示独立的�
   const search = palette.getByRole('textbox', { name: '搜索题型' });
 
   await expect(palette.getByText('邮箱', { exact: true })).toBeHidden();
-  await palette.getByText('基础', { exact: true }).click();
+  await palette.getByText('填空题', { exact: true }).click();
   await expect(palette.getByText('邮箱', { exact: true })).toBeVisible();
-  await palette.getByText('基础', { exact: true }).click();
+  await palette.getByText('填空题', { exact: true }).click();
   await expect(palette.getByText('邮箱', { exact: true })).toBeHidden();
+  await palette.getByText('选择题', { exact: true }).click();
+  await expect(palette.getByText('单选题', { exact: true })).toBeVisible();
+  await expect(palette.getByText('图片多选', { exact: true })).toBeVisible();
   await search.fill('邮箱');
   await expect(palette.getByText('邮箱', { exact: true })).toBeVisible();
   await search.fill('nps');
   await expect(palette.getByText('NPS', { exact: true })).toBeVisible();
+  await search.fill('手机号');
+  await expect(palette.getByText('手机号', { exact: true })).toBeVisible();
   await search.fill('不存在的题型');
   await expect(palette.getByText('未找到匹配题型')).toBeVisible();
   await palette.getByRole('tab', { name: '题库' }).click();

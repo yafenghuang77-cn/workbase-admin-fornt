@@ -9,8 +9,8 @@ import {
 import { Button, Tag, Tooltip } from 'antd';
 import clsx from 'clsx';
 
+import { getQuestionTypeLabel } from '../../question-types';
 import type { DesignerQuestion } from '../data';
-import { getQuestionTypeLabel } from '../data';
 
 import { QuestionPreview } from './QuestionPreview';
 
