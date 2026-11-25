@@ -1,5 +1,8 @@
+import { useState } from 'react';
+
 import { useNavigate } from '@tanstack/react-router';
 import { App } from 'antd';
+import clsx from 'clsx';
 
 import { DesignerCanvas } from './components/DesignerCanvas';
 import { DesignerFooter } from './components/DesignerFooter';
@@ -13,6 +16,7 @@ import './index.less';
 export const QuestionnaireCreatePage = () => {
   const navigate = useNavigate();
   const { message } = App.useApp();
+  const [paletteCollapsed, setPaletteCollapsed] = useState(false);
 
   const returnToList = () => {
     navigate({ to: '/questionnaires/list' }).catch(() => {
@@ -22,10 +26,19 @@ export const QuestionnaireCreatePage = () => {
 
   return (
     <main className="questionnaire-create-page" aria-label="问卷设计">
-      <DesignerHeader onBack={returnToList} />
-      <div className="questionnaire-create__workspace">
-        <QuestionPalette />
-        <DesignerCanvas />
+      <DesignerHeader
+        onBack={returnToList}
+        paletteCollapsed={paletteCollapsed}
+        onExpandPalette={() => setPaletteCollapsed(false)}
+      />
+      <div
+        className={clsx(
+          'questionnaire-create__workspace',
+          paletteCollapsed && 'questionnaire-create__workspace--palette-hidden',
+        )}
+      >
+        <QuestionPalette collapsed={paletteCollapsed} onCollapsedChange={setPaletteCollapsed} />
+        <DesignerCanvas paletteCollapsed={paletteCollapsed} />
         <InspectorPanel />
       </div>
       <DesignerFooter onCancel={returnToList} />

@@ -52,6 +52,27 @@ test('题型默认折叠，支持展开收起与搜索，题库显示独立的�
   await expect(page).toHaveURL(/\/workbase\/questionnaires\/list$/u);
 });
 
+test('组件库支持收起隐藏并从顶栏重新展开', async ({ page }) => {
+  await page.goto('questionnaires/create');
+  const palette = page.getByRole('complementary', { name: '组件库' });
+  const canvas = page.getByRole('region', { name: '问卷画布' });
+  const expandedWidth = (await palette.boundingBox())?.width ?? 0;
+  const canvasWidth = (await canvas.boundingBox())?.width ?? 0;
+
+  await page.getByRole('button', { name: '收起组件库' }).click();
+  await expect(palette).toBeHidden();
+  expect((await canvas.boundingBox())?.width ?? 0).toBeGreaterThan(canvasWidth);
+  await expect(
+    canvas.getByText('点击顶栏的组件库按钮展开题型面板', { exact: false }),
+  ).toBeVisible();
+
+  await page.getByRole('button', { name: '展开组件库' }).click();
+  await expect(palette.getByRole('tab', { name: '题型' })).toBeVisible();
+  await expect(page.getByRole('textbox', { name: '搜索题型' })).toBeVisible();
+  await expect(canvas.getByText('从左侧组件库挑选题型', { exact: false })).toBeVisible();
+  await expect.poll(async () => (await palette.boundingBox())?.width ?? 0).toBe(expandedWidth);
+});
+
 test('窄屏优先显示画布且页面不会横向溢出', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('questionnaires/create');

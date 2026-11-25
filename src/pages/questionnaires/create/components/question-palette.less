@@ -4,6 +4,11 @@
   overflow: hidden;
 }
 
+/* 收起时整块隐藏，避免 display: flex 覆盖 hidden 默认样式 */
+.question-palette[hidden] {
+  display: none;
+}
+
 .question-palette__tabs {
   display: flex;
   flex: 1;

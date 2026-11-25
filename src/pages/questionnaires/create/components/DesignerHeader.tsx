@@ -1,6 +1,7 @@
 import { useId } from 'react';
 
 import {
+  AppstoreOutlined,
   ArrowLeftOutlined,
   BgColorsOutlined,
   BranchesOutlined,
@@ -8,10 +9,13 @@ import {
   EyeOutlined,
   FileTextOutlined,
 } from '@ant-design/icons';
-import { Button, Input, Segmented } from 'antd';
+import { Button, Input, Segmented, Tooltip } from 'antd';
 
 interface DesignerHeaderProps {
   onBack: () => void;
+  /** 组件库是否已收起。 */
+  paletteCollapsed: boolean;
+  onExpandPalette: () => void;
 }
 
 const viewOptions = [
@@ -25,7 +29,11 @@ const modeOptions = [
   { label: '预览', value: 'preview', icon: <EyeOutlined />, disabled: true },
 ];
 
-export const DesignerHeader = ({ onBack }: DesignerHeaderProps) => {
+export const DesignerHeader = ({
+  onBack,
+  paletteCollapsed,
+  onExpandPalette,
+}: DesignerHeaderProps) => {
   const titleId = useId();
 
   return (
@@ -38,6 +46,18 @@ export const DesignerHeader = ({ onBack }: DesignerHeaderProps) => {
           aria-label="返回问卷列表"
           onClick={onBack}
         />
+        {paletteCollapsed ? (
+          <Tooltip title="展开组件库">
+            <Button
+              className="designer-header__palette-toggle"
+              type="text"
+              icon={<AppstoreOutlined />}
+              aria-label="展开组件库"
+              aria-expanded={false}
+              onClick={onExpandPalette}
+            />
+          </Tooltip>
+        ) : null}
         <div className="designer-header__title-field">
           <Input id={titleId} maxLength={120} placeholder="未命名问卷" aria-label="问卷名称" />
         </div>

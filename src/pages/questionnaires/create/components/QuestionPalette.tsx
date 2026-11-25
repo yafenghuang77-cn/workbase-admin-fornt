@@ -1,8 +1,8 @@
 import type { SyntheticEvent } from 'react';
 import { useState } from 'react';
 
-import { SearchOutlined } from '@ant-design/icons';
-import { Empty, Input, Tabs } from 'antd';
+import { MenuFoldOutlined, SearchOutlined } from '@ant-design/icons';
+import { Button, Empty, Input, Tabs, Tooltip } from 'antd';
 
 import { paletteGroups } from '../data';
 
@@ -77,11 +77,31 @@ const QuestionLibrary = () => (
   </div>
 );
 
-export const QuestionPalette = () => (
-  <aside className="question-palette" aria-label="组件库">
+interface QuestionPaletteProps {
+  /** 是否收起；收起时整块隐藏，由顶栏入口重新展开。 */
+  collapsed: boolean;
+  onCollapsedChange: (collapsed: boolean) => void;
+}
+
+export const QuestionPalette = ({ collapsed, onCollapsedChange }: QuestionPaletteProps) => (
+  <aside className="question-palette" aria-label="组件库" hidden={collapsed}>
     <Tabs
       className="question-palette__tabs"
       size="small"
+      tabBarExtraContent={{
+        right: (
+          <Tooltip title="收起组件库">
+            <Button
+              type="text"
+              size="small"
+              icon={<MenuFoldOutlined />}
+              aria-label="收起组件库"
+              aria-expanded
+              onClick={() => onCollapsedChange(true)}
+            />
+          </Tooltip>
+        ),
+      }}
       items={[
         { key: 'types', label: '题型', children: <QuestionTypes /> },
         { key: 'library', label: '题库', children: <QuestionLibrary /> },

@@ -18,6 +18,11 @@
   padding: 12px;
 }
 
+/* 组件库收起后左列整体移除，画布与配置面板两栏铺满 */
+.questionnaire-create__workspace--palette-hidden {
+  grid-template-columns: minmax(0, 1fr) minmax(248px, 19%);
+}
+
 /* ===== 顶栏 ===== */
 .designer-header {
   display: grid;
@@ -51,8 +56,15 @@
 }
 
 .designer-header .designer-header__back:hover,
-.designer-header .designer-header__back:focus-visible {
+.designer-header .designer-header__back:focus-visible,
+.designer-header .designer-header__palette-toggle:hover,
+.designer-header .designer-header__palette-toggle:focus-visible {
   color: var(--ant-color-primary);
+}
+
+.designer-header .designer-header__palette-toggle {
+  flex-shrink: 0;
+  color: var(--ant-color-text-secondary);
 }
 
 .designer-header__title-field {
@@ -623,7 +635,8 @@
     justify-content: space-between;
   }
 
-  .questionnaire-create__workspace {
+  .questionnaire-create__workspace,
+  .questionnaire-create__workspace--palette-hidden {
     grid-template-columns: minmax(0, 1fr);
   }
 
