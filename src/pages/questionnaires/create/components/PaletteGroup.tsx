@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { ReactNode, SyntheticEvent } from 'react';
 
 import {
   CalendarOutlined,
@@ -38,25 +38,44 @@ const typeIcons: Record<QuestionType, ReactNode> = {
 
 interface PaletteGroupProps {
   group: PaletteSection;
+  /** 强制展开（搜索态）；缺省时默认折叠，可手动展开。 */
+  open?: boolean | undefined;
+  onToggle?: ((event: SyntheticEvent<HTMLDetailsElement>) => void) | undefined;
 }
 
-export const PaletteGroup = ({ group }: PaletteGroupProps) => (
-  <details className="palette-group" open>
-    <summary className="palette-group__summary">
-      <span>{group.label}</span>
-      <span className="palette-group__count">{group.items.length}</span>
-      <DownOutlined className="palette-group__chevron" aria-hidden="true" />
-    </summary>
+export const PaletteGroup = ({ group, open, onToggle }: PaletteGroupProps) => {
+  const items = (
     <ul className="palette-group__items">
       {group.items.map((item) => (
         <li className="palette-item" key={item.type}>
           <span className="palette-item__icon" aria-hidden="true">
             {typeIcons[item.type]}
           </span>
-          <span>{item.label}</span>
-          {item.hint ? <span className="palette-item__hint">{item.hint}</span> : null}
+          <span className="palette-item__text">
+            <span className="palette-item__label">{item.label}</span>
+            {item.hint ? <span className="palette-item__hint">{item.hint}</span> : null}
+          </span>
         </li>
       ))}
     </ul>
-  </details>
-);
+  );
+
+  if (group.collapsible === false) {
+    return (
+      <section className="palette-group palette-group--flat" aria-label={group.label}>
+        {items}
+      </section>
+    );
+  }
+
+  return (
+    <details className="palette-group" open={open} onToggle={onToggle}>
+      <summary className="palette-group__summary">
+        <span>{group.label}</span>
+        <span className="palette-group__count">{group.items.length}</span>
+        <DownOutlined className="palette-group__chevron" aria-hidden="true" />
+      </summary>
+      {items}
+    </details>
+  );
+};

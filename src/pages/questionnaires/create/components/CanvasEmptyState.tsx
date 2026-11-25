@@ -9,7 +9,7 @@ export const CanvasEmptyState = () => (
       description={
         <>
           <h3>暂无数据</h3>
-          <p>当前问卷尚未配置题目或内容区块。</p>
+          <p>当前问卷尚未配置题目或内容区块，从左侧组件库挑选题型，开始搭建问卷。</p>
         </>
       }
     />

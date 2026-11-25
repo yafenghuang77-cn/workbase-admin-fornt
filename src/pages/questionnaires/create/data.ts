@@ -30,6 +30,8 @@ export interface PaletteGroup {
   key: string;
   label: string;
   items: PaletteItem[];
+  /** 是否可折叠；缺省可折叠，设为 false 时条目直接平铺展示。 */
+  collapsible?: boolean;
 }
 
 /** 画布中的题目。 */
@@ -113,6 +115,7 @@ export const paletteGroups: PaletteGroup[] = [
   {
     key: 'container',
     label: '容器块',
+    collapsible: false,
     items: [
       { type: 'group', label: '题目组', hint: '编排题目' },
       { type: 'follow-up', label: '追问区', hint: '继续追问' },

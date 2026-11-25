@@ -25,11 +25,14 @@ test('新增问卷进入独立全屏设计页，未配置画布在刷新后仍�
   await expect(page.getByRole('button', { name: '新增问卷' })).toBeVisible();
 });
 
-test('题型支持搜索和折叠，题库显示独立的未开放提示', async ({ page }) => {
+test('题型默认折叠，支持展开收起与搜索，题库显示独立的未开放提示', async ({ page }) => {
   await page.goto('questionnaires/create');
   const palette = page.getByRole('complementary', { name: '组件库' });
   const search = palette.getByRole('textbox', { name: '搜索题型' });
 
+  await expect(palette.getByText('邮箱', { exact: true })).toBeHidden();
+  await palette.getByText('基础', { exact: true }).click();
+  await expect(palette.getByText('邮箱', { exact: true })).toBeVisible();
   await palette.getByText('基础', { exact: true }).click();
   await expect(palette.getByText('邮箱', { exact: true })).toBeHidden();
   await search.fill('邮箱');

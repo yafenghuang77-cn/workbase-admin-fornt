@@ -35,12 +35,11 @@ export const DesignerHeader = ({ onBack }: DesignerHeaderProps) => {
           className="designer-header__back"
           type="text"
           icon={<ArrowLeftOutlined />}
+          aria-label="返回问卷列表"
           onClick={onBack}
-        >
-          返回问卷列表
-        </Button>
+        />
         <div className="designer-header__title-field">
-          <Input id={titleId} aria-label="问卷名称" placeholder="未命名问卷" />
+          <Input id={titleId} maxLength={120} placeholder="未命名问卷" aria-label="问卷名称" />
         </div>
       </div>
       <div className="designer-header__navigation">

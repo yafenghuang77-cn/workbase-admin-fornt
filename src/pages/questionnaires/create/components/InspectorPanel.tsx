@@ -12,7 +12,7 @@ export const InspectorPanel = () => (
     <div className="inspector-panel__placeholder">
       <SelectOutlined aria-hidden="true" />
       <h3>未选中题目</h3>
-      <p>画布中选中题目后，相关设置会显示在此处。</p>
+      <p>在画布中选中题目后，选项与答题规则会显示在此处。</p>
     </div>
   </aside>
 );

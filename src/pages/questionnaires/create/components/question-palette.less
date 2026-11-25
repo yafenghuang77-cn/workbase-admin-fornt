@@ -1,16 +1,38 @@
 .question-palette {
-  overflow-y: auto;
-  scrollbar-gutter: stable;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .question-palette__tabs {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
   padding: 0 12px 12px;
+
+  /* Tabs 内容区撑满剩余高度，题型列表在面板内部滚动 */
+  .ant-tabs-body-holder {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    scrollbar-gutter: stable;
+  }
+}
+
+/* 搜索框吸顶固定，列表滚动时不跟随 */
+.question-palette__search {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding-bottom: 8px;
+  background: var(--ant-color-bg-container);
 }
 
 .question-palette__groups {
   display: grid;
   gap: 12px;
-  margin-top: 12px;
+  margin-top: 4px;
 }
 
 .palette-group__summary {
@@ -24,6 +46,7 @@
   list-style: none;
   cursor: pointer;
   border-radius: var(--ant-border-radius-sm);
+  transition: background-color var(--ant-motion-duration-mid);
 }
 
 .palette-group__summary::-webkit-details-marker {
@@ -39,6 +62,22 @@
   outline-offset: 1px;
 }
 
+/* 平铺分组：不显示标题，用分割线与上方折叠分组区隔 */
+.palette-group--flat {
+  padding-top: 12px;
+  border-top: 1px solid var(--ant-color-border-secondary);
+}
+
+.palette-group--flat .palette-group__items {
+  padding-top: 0;
+}
+
+/* 搜索后平铺分组可能排在首位，此时不显示分割线 */
+.question-palette__groups > .palette-group--flat:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
 .palette-group__count {
   padding: 0 6px;
   font-size: 12px;
@@ -46,12 +85,14 @@
   color: var(--ant-color-text-secondary);
   background: var(--ant-color-fill-tertiary);
   border-radius: 999px;
+  font-variant-numeric: tabular-nums;
 }
 
 .palette-group__chevron {
   margin-inline-start: auto;
   font-size: 10px;
   color: var(--ant-color-text-secondary);
+  transition: transform var(--ant-motion-duration-mid);
 }
 
 .palette-group:not([open]) .palette-group__chevron {
@@ -60,32 +101,70 @@
 
 .palette-group__items {
   display: grid;
-  gap: 4px;
-  padding: 4px 0 0;
+  gap: 6px;
+  padding: 6px 0 0;
   margin: 0;
   list-style: none;
 }
 
 .palette-item {
   display: flex;
-  gap: 8px;
+  gap: 10px;
   align-items: center;
-  min-height: 34px;
-  padding: 4px 8px;
+  min-height: 40px;
+  padding: 6px 10px;
   font-size: 13px;
+  cursor: pointer;
   background: var(--ant-color-fill-quaternary);
-  border-radius: var(--ant-border-radius-sm);
+  border: 1px solid transparent;
+  border-radius: var(--ant-border-radius);
+  transition:
+    background-color var(--ant-motion-duration-mid),
+    border-color var(--ant-motion-duration-mid);
+}
+
+.palette-item:hover {
+  background: var(--ant-color-primary-bg);
+  border-color: var(--ant-color-primary-border);
 }
 
 .palette-item__icon {
-  display: inline-flex;
+  display: grid;
+  flex: 0 0 26px;
+  height: 26px;
+  font-size: 13px;
   color: var(--ant-color-primary-text);
+  background: var(--ant-color-primary-bg);
+  border-radius: var(--ant-border-radius-sm);
+  place-items: center;
+  transition: background-color var(--ant-motion-duration-mid);
 }
 
+.palette-item:hover .palette-item__icon {
+  background: var(--ant-color-primary-bg-hover);
+}
+
+.palette-item__text {
+  display: flex;
+  flex: 1;
+  gap: 8px;
+  align-items: center;
+  min-width: 0;
+}
+
+.palette-item__label {
+  overflow: hidden;
+  font-weight: 500;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* 说明文字行内右对齐，保持条目与题型块同高 */
 .palette-item__hint {
+  flex-shrink: 0;
   margin-inline-start: auto;
   font-size: 12px;
-  color: var(--ant-color-text-secondary);
+  color: var(--ant-color-text-tertiary);
 }
 
 @media (width <= 960px) {
