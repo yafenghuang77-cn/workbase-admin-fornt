@@ -9,8 +9,7 @@ test('新增问卷进入独立全屏设计页，未配置画布在刷新后仍�
     const main = page.getByRole('main', { name: '问卷设计' });
     const canvas = main.getByRole('region', { name: '问卷画布' });
     await expect(main).toBeVisible();
-    await expect(canvas.getByRole('heading', { name: '暂无数据' })).toBeVisible();
-    await expect(canvas.getByText('0 道题')).toBeVisible();
+    await expect(canvas.getByRole('heading', { name: '暂无题目' })).toBeVisible();
     await expect(main.getByRole('button', { name: '保存并返回' })).toBeDisabled();
     await expect(page.locator('.workbase-layout')).toHaveCount(0);
     expect(await main.boundingBox()).toEqual({
@@ -54,7 +53,7 @@ test('窄屏优先显示画布且页面不会横向溢出', async ({ page }) => 
   const canvas = page.getByRole('region', { name: '问卷画布' });
   const palette = page.getByRole('complementary', { name: '组件库' });
 
-  await expect(canvas.getByRole('heading', { name: '暂无数据' })).toBeInViewport();
+  await expect(canvas.getByRole('heading', { name: '暂无题目' })).toBeInViewport();
   expect((await canvas.boundingBox())?.y).toBeLessThan((await palette.boundingBox())?.y ?? 0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(390);
 });

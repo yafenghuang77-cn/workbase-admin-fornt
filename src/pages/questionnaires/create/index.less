@@ -157,45 +157,46 @@
     var(--ant-color-bg-layout);
 }
 
-.designer-canvas__empty {
-  width: 100%;
-  max-width: 460px;
-  padding: 48px 24px;
-  margin: auto;
-  background: var(--ant-color-bg-container);
+/* 空态：铺满画布的虚线投放区，内容居中 */
+.designer-canvas__dropzone {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+  justify-content: center;
+  min-height: 240px;
+  padding: 32px 24px;
+  text-align: center;
   border: 1px dashed var(--ant-color-border);
   border-radius: var(--ant-border-radius-lg);
-  box-shadow: var(--ant-box-shadow-tertiary);
-
-  h3 {
-    margin: 0 0 6px;
-    font-size: 18px;
-    font-weight: 600;
-    color: var(--ant-color-text);
-  }
-
-  p {
-    max-width: 320px;
-    margin: 0 auto;
-    line-height: 22px;
-    color: var(--ant-color-text-secondary);
-  }
 }
 
-.designer-canvas__empty .designer-canvas__empty-image {
+.designer-canvas__dropzone-icon {
   display: grid;
-  width: 72px;
-  height: 72px;
-  margin: 0 auto 20px;
+  width: 56px;
+  height: 56px;
+  margin-bottom: 10px;
+  font-size: 24px;
   color: var(--ant-color-primary-text);
   background: var(--ant-color-primary-bg);
   border-radius: 50%;
   place-items: center;
 }
 
-.designer-canvas__empty .designer-canvas__empty-icon svg {
-  width: 32px;
-  height: 32px;
+.designer-canvas__dropzone-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ant-color-text);
+}
+
+.designer-canvas__dropzone-text {
+  max-width: 320px;
+  margin: 0;
+  font-size: 13px;
+  line-height: 22px;
+  color: var(--ant-color-text-secondary);
 }
 
 .designer-canvas__content {
