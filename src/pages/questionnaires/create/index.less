@@ -162,7 +162,8 @@
   flex: 1;
   flex-direction: column;
   min-height: 0;
-  padding: clamp(16px, 2.5vw, 32px);
+  padding: 12px;
+  // padding: clamp(16px, 2.5vw, 32px);
   overflow-y: auto;
   background:
     radial-gradient(var(--ant-color-fill-secondary) 1px, transparent 1px) 0 0 / 20px 20px,
@@ -211,17 +212,112 @@
   color: var(--ant-color-text-secondary);
 }
 
+/* 题型悬停在画布上时给出投放反馈 */
+.designer-canvas__surface.is-drop-target {
+  background:
+    radial-gradient(var(--ant-color-primary-border) 1px, transparent 1px) 0 0 / 20px 20px,
+    var(--ant-color-primary-bg);
+  box-shadow: inset 0 0 0 2px var(--ant-color-primary);
+}
+
+.designer-canvas__dropzone.is-drop-target {
+  background: var(--ant-color-primary-bg);
+  border-color: var(--ant-color-primary);
+  border-style: solid;
+}
+
+.designer-canvas__drop-hint {
+  padding: 10px 16px;
+  margin: 0;
+  font-size: 13px;
+  color: var(--ant-color-primary-text);
+  text-align: center;
+  background: var(--ant-color-primary-bg);
+  border: 1px dashed var(--ant-color-primary);
+  border-radius: var(--ant-border-radius-lg);
+}
+
+/* 跟随指针的拖拽预览 */
+.designer-drag-preview {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ant-color-primary-text);
+  pointer-events: none;
+  background: var(--ant-color-bg-container);
+  border: 1px solid var(--ant-color-primary);
+  border-radius: var(--ant-border-radius);
+  box-shadow: var(--ant-box-shadow-secondary);
+}
+
 .designer-canvas__content {
   display: flex;
   flex-direction: column;
-  gap: 12px;
   width: 100%;
   max-width: 920px;
   margin-inline: auto;
 }
 
+.designer-canvas__row {
+  display: flex;
+  flex-direction: column;
+}
+
+/* 点击选中容器：主色描边环 */
+.designer-canvas__block.is-selected {
+  border-radius: var(--ant-border-radius-lg);
+  outline: 2px solid var(--ant-color-primary);
+  outline-offset: 2px;
+}
+
+/* 容器之间的插入位：平时隐形细缝，拖拽时可见间隙，激活展开占位条 */
+.designer-canvas__slot {
+  display: flex;
+  align-items: center;
+  height: 10px;
+  opacity: 0;
+  transition:
+    height var(--ant-motion-duration-mid) ease,
+    opacity var(--ant-motion-duration-mid) ease,
+    padding var(--ant-motion-duration-mid) ease;
+}
+
+.designer-canvas__slot.is-visible {
+  height: 18px;
+  opacity: 1;
+}
+
+.designer-canvas__slot.is-active {
+  height: 66px;
+  padding: 6px 0;
+}
+
+.designer-canvas__slot-placeholder {
+  box-sizing: border-box;
+  width: 100%;
+  height: 0;
+  background: transparent;
+  border: 0 dashed var(--ant-color-primary);
+  border-radius: var(--ant-border-radius);
+  transform: scaleX(0.98);
+  transition:
+    height var(--ant-motion-duration-mid) ease,
+    border-width var(--ant-motion-duration-mid) ease,
+    background-color var(--ant-motion-duration-mid) ease,
+    transform var(--ant-motion-duration-mid) ease;
+}
+
+.designer-canvas__slot.is-active .designer-canvas__slot-placeholder {
+  height: 54px;
+  background: var(--ant-color-primary-bg);
+  border-width: 2px;
+  transform: scaleX(1);
+}
+
 .designer-block {
-  padding: 12px 16px;
+  overflow: hidden;
   border: 1px solid;
   border-radius: var(--ant-border-radius-lg);
 }
@@ -240,7 +336,12 @@
   display: flex;
   gap: 8px;
   align-items: center;
-  margin-bottom: 6px;
+  padding: 12px 16px 0;
+}
+
+.designer-block__icon {
+  display: inline-flex;
+  color: var(--ant-color-success);
 }
 
 .designer-block__title {
@@ -248,11 +349,29 @@
   font-weight: 600;
 }
 
+.designer-block__meta {
+  font-size: 12px;
+  color: var(--ant-color-text-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+
 .designer-block__body {
+  padding: 8px 16px 12px;
   margin: 0;
   font-size: 13px;
   line-height: 22px;
   color: var(--ant-color-text-secondary);
+}
+
+/* 引导语正文：去掉编辑器白底与内框，直接落在区块浅色底上 */
+.designer-block__richtext {
+  background: transparent;
+}
+
+.designer-block__richtext .rich-text-editor__content {
+  padding: 0;
+  font-size: 13px;
+  line-height: 22px;
 }
 
 .designer-block__body--placeholder {
@@ -277,9 +396,35 @@
   border-bottom: 1px solid var(--ant-color-border-secondary);
 }
 
-.question-group__handle {
-  color: var(--ant-color-text-quaternary);
-  cursor: grab;
+.question-group__icon {
+  display: inline-flex;
+  color: var(--ant-color-text-secondary);
+}
+
+/* 题目悬停在容器正文时给出投放反馈 */
+.question-group__body.is-drop-target {
+  background: var(--ant-color-primary-bg);
+  box-shadow: inset 0 0 0 2px var(--ant-color-primary);
+  border-radius: var(--ant-border-radius);
+}
+
+/* 追问区：紫色系与题目组区分 */
+.question-group--follow-up {
+  border-color: var(--ant-purple-3);
+}
+
+.question-group--follow-up .question-group__header {
+  background: var(--ant-purple-1);
+  border-bottom-color: var(--ant-purple-3);
+}
+
+.question-group--follow-up .question-group__icon {
+  color: var(--ant-purple-6);
+}
+
+.question-group--follow-up .question-group__add {
+  color: var(--ant-purple-6);
+  border-color: var(--ant-purple-3);
 }
 
 .question-group__title {
@@ -383,175 +528,36 @@
   line-height: 22px;
 }
 
-/* ===== 题型预览 ===== */
-.question-preview__stars {
-  display: flex;
-  gap: 8px;
-  font-size: 22px;
-  color: var(--ant-color-fill);
-}
-
-.question-preview__nps {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-}
-
-.question-preview__nps span {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 26px;
-  font-size: 12px;
-  color: var(--ant-color-text-secondary);
-  background: var(--ant-color-bg-container);
-  border: 1px solid var(--ant-color-border);
-  border-radius: var(--ant-border-radius-sm);
-  font-variant-numeric: tabular-nums;
-}
-
-.question-preview__nps-labels {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 5px;
-  font-size: 11px;
-  color: var(--ant-color-text-quaternary);
-}
-
-.question-preview__matrix {
-  width: 100%;
-  font-size: 12px;
-  border-collapse: collapse;
-}
-
-.question-preview__matrix th {
-  padding: 6px 4px;
-  font-weight: 600;
-  color: var(--ant-color-text-secondary);
-  background: var(--ant-color-fill-quaternary);
-  border-bottom: 1px solid var(--ant-color-border-secondary);
-}
-
-.question-preview__matrix td {
-  padding: 8px 4px;
-  color: var(--ant-color-text-secondary);
-  text-align: center;
-  border-bottom: 1px solid var(--ant-color-border-secondary);
-}
-
-.question-preview__row-label {
-  color: var(--ant-color-text);
-  text-align: left;
-}
-
-.question-preview__matrix tbody tr:last-child td {
-  border-bottom: 0;
-}
-
-.question-preview__radio {
-  display: inline-block;
-  width: 14px;
-  height: 14px;
-  border: 1px solid var(--ant-color-border);
-  border-radius: 50%;
-}
-
-.question-preview__radio.is-on {
-  border: 4px solid var(--ant-color-primary);
-}
-
-.question-preview__field {
-  width: 240px;
-  max-width: 100%;
-  height: 32px;
-  background: var(--ant-color-fill-quaternary);
-  border-radius: var(--ant-border-radius);
-}
-
-.question-preview__fields {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.question-preview__options {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 0;
-  margin: 0;
-  list-style: none;
-}
-
-.question-preview__option {
-  display: flex;
-  gap: 8px;
-  align-items: center;
+/* 题型 UI 由业务组件承载，见 src/components/business/question-types */
+.question-card__body {
   font-size: 13px;
-  color: var(--ant-color-text-secondary);
 }
 
-.question-preview__mark {
-  flex-shrink: 0;
-  width: 14px;
-  height: 14px;
-  border: 1px solid var(--ant-color-border);
-  border-radius: 50%;
+/* ===== 右侧配置面板 ===== */
+.inspector-panel {
+  overflow-y: auto;
 }
 
-.question-preview__mark--square {
-  border-radius: var(--ant-border-radius-sm);
-}
-
-.question-preview__image-options {
+.inspector-panel__body {
   display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
 }
 
-.question-preview__image-option {
+.inspector-panel__field {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  width: 96px;
 }
 
-.question-preview__image-thumb {
-  display: grid;
-  height: 64px;
-  font-size: 20px;
-  color: var(--ant-color-text-quaternary);
-  background: var(--ant-color-fill-quaternary);
-  border: 1px solid var(--ant-color-border-secondary);
-  border-radius: var(--ant-border-radius);
-  place-items: center;
-}
-
-.question-preview__image-caption {
-  overflow: hidden;
+.inspector-panel__label {
   font-size: 12px;
   color: var(--ant-color-text-secondary);
-  white-space: nowrap;
-  text-overflow: ellipsis;
 }
 
-.question-preview__media {
-  display: grid;
-  width: 200px;
-  max-width: 100%;
-  height: 112px;
-  font-size: 28px;
-  color: var(--ant-color-text-quaternary);
-  background: var(--ant-color-fill-quaternary);
-  border: 1px solid var(--ant-color-border-secondary);
-  border-radius: var(--ant-border-radius);
-  place-items: center;
-}
-
-/* ===== 右侧配置面板（本期占位） ===== */
-.inspector-panel {
-  overflow-y: auto;
+.inspector-panel__field .ant-input-number {
+  width: 100%;
 }
 
 .inspector-panel__placeholder {

@@ -1,0 +1,93 @@
+/* 选项列表与图片选项 */
+.question-type__options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.question-type__option-list,
+.question-type__image-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.question-type__option {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  min-height: 38px;
+  padding: 6px 10px;
+  background: var(--ant-color-bg-container);
+  border: 1px solid var(--ant-color-border-secondary);
+  border-radius: var(--ant-border-radius);
+}
+
+.question-type__option-control {
+  flex: 1;
+  min-width: 0;
+}
+
+.question-type__option-remove {
+  flex-shrink: 0;
+  color: var(--ant-color-text-tertiary);
+}
+
+/* 常规按钮尺寸，按内容自适应并左对齐 */
+.question-type__add-option {
+  align-self: flex-start;
+  color: var(--ant-color-primary-text);
+}
+
+/* 图片选项：正方形图片在上，控件与文案在下 */
+.question-type__image-option {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 200px;
+  padding: 10px;
+  background: var(--ant-color-bg-container);
+  border: 1px solid var(--ant-color-border-secondary);
+  border-radius: var(--ant-border-radius);
+}
+
+/* 图片区为正方形：宽度自适应卡片，宽高比锁定 1:1 */
+.question-type__image-media {
+  overflow: hidden;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background: var(--ant-color-fill-quaternary);
+  border-radius: var(--ant-border-radius);
+}
+
+.question-type__image-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.question-type__image-placeholder {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  font-size: 12px;
+  color: var(--ant-color-text-quaternary);
+}
+
+.question-type__image-placeholder .anticon {
+  font-size: 20px;
+}
+
+/* 控件占满剩余宽度，删除按钮固定在最右 */
+.question-type__image-caption {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  min-width: 0;
+}

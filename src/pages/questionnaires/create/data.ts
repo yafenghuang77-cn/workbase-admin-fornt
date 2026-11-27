@@ -1,3 +1,5 @@
+import type { RichTextValue } from '@/components/rich-text-editor';
+
 import type {
   QuestionTypeCategory,
   QuestionTypeDefinition,
@@ -42,6 +44,8 @@ export interface DesignerQuestion {
   scaleLabels?: [string, string];
   /** 矩阵题的行标题。 */
   rows?: string[];
+  /** 媒体展示的素材项，支持多个。 */
+  mediaItems?: Array<{ id: string; url?: string }>;
   /** 演示用预填答案：行索引 -> 列索引。 */
   previewAnswers?: Record<number, number>;
 }
@@ -52,14 +56,19 @@ export interface GuideBlock {
   kind: 'guide';
   title: string;
   content: string;
+  /** 富文本引导语文档，作为编辑与展示的内容源。 */
+  contentDoc?: RichTextValue;
+  /** 显示时长（秒），默认 30。 */
+  displayTime?: number;
 }
 
-/** 追问区块。 */
+/** 追问区块：与题目组一样可容纳题目。 */
 export interface FollowUpBlock {
   id: string;
   kind: 'follow-up';
   title: string;
   placeholder: string;
+  questions: DesignerQuestion[];
 }
 
 /** 题目组容器。 */

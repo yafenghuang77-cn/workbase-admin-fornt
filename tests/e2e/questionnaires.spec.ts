@@ -69,8 +69,279 @@ test('组件库支持收起隐藏并从顶栏重新展开', async ({ page }) => 
   await page.getByRole('button', { name: '展开组件库' }).click();
   await expect(palette.getByRole('tab', { name: '题型' })).toBeVisible();
   await expect(page.getByRole('textbox', { name: '搜索题型' })).toBeVisible();
-  await expect(canvas.getByText('从左侧组件库挑选题型', { exact: false })).toBeVisible();
+  await expect(canvas.getByText('先拖入题目组或追问区', { exact: false })).toBeVisible();
   await expect.poll(async () => (await palette.boundingBox())?.width ?? 0).toBe(expandedWidth);
+});
+
+test('容器组件可拖拽到画布并渲染对应区块', async ({ page }) => {
+  await page.goto('questionnaires/create');
+  const canvas = page.getByRole('region', { name: '问卷画布' });
+  const surface = page.getByTestId('canvas-surface');
+  await expect(canvas.getByRole('heading', { name: '暂无题目' })).toBeVisible();
+
+  const blocks = canvas.locator('.designer-canvas__row');
+
+  const dragToCanvas = async (label: string) => {
+    const expected = (await blocks.count()) + 1;
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      const item = page.locator('.palette-item').filter({ hasText: label }).first();
+      const from = await item.boundingBox();
+      const to = await surface.boundingBox();
+      if (!from || !to) throw new Error('拖拽目标不可见');
+      // 落点取投放区顶部固定区域，避免已添加内容导致的布局漂移
+      await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
+      await page.mouse.down();
+      await page.mouse.move(from.x + from.width / 2 + 24, from.y + from.height / 2, { steps: 6 });
+      await page.mouse.move(to.x + to.width / 2, to.y + 24, { steps: 12 });
+      await page.waitForTimeout(150);
+      await page.mouse.up();
+      try {
+        await expect(blocks).toHaveCount(expected, { timeout: 2000 });
+        return;
+      } catch {
+        // 指针事件偶发未被识别时重试一次拖拽
+      }
+    }
+    throw new Error(`拖拽 ${label} 未在画布生成区块`);
+  };
+
+  await dragToCanvas('引导语');
+  await expect(canvas.getByRole('region', { name: '引导语' })).toBeVisible();
+  await expect(canvas.getByText('感谢你参与本次问卷', { exact: false })).toBeVisible();
+
+  await dragToCanvas('追问区');
+  const followUp = canvas.getByRole('region', { name: '追问区' });
+  await expect(followUp).toBeVisible();
+  await expect(followUp).toHaveClass(/question-group--follow-up/u);
+  await expect(followUp.getByRole('button', { name: /添加题目/u })).toBeVisible();
+
+  await dragToCanvas('题目组');
+  const group = canvas.getByRole('region', { name: '题目组' });
+  await expect(group).toBeVisible();
+  await expect(group.getByText('共 0 题')).toBeVisible();
+  await expect(group.getByRole('button', { name: /添加题目/u })).toBeVisible();
+  await expect(canvas.locator('.question-card')).toHaveCount(0);
+  await expect(canvas.getByRole('heading', { name: '暂无题目' })).toHaveCount(0);
+});
+
+test('容器可拖拽到指定位置插入', async ({ page }) => {
+  await page.goto('questionnaires/create');
+  const canvas = page.getByRole('region', { name: '问卷画布' });
+  const surface = page.getByTestId('canvas-surface');
+  const rows = canvas.locator('.designer-canvas__row');
+  const orderOf = () =>
+    canvas
+      .locator('.designer-canvas__row section[aria-label]')
+      .evaluateAll((nodes) => nodes.map((node) => node.getAttribute('aria-label')));
+
+  const pressAndMove = async (
+    from: { x: number; y: number; width: number; height: number },
+    to: { x: number; y: number },
+  ) => {
+    await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(from.x + from.width / 2 + 20, from.y + from.height / 2, { steps: 5 });
+    await page.mouse.move(to.x, to.y, { steps: 12 });
+    await page.waitForTimeout(150);
+    await page.mouse.up();
+    await page.waitForTimeout(300);
+  };
+
+  // 先拖入两个容器：引导语、追问区
+  for (const label of ['引导语', '追问区']) {
+    const expected = (await rows.count()) + 1;
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      const item = page.locator('.palette-item').filter({ hasText: label }).first();
+      const from = await item.boundingBox();
+      const to = await surface.boundingBox();
+      if (!from || !to) throw new Error('拖拽目标不可见');
+      await pressAndMove(from, { x: to.x + to.width / 2, y: to.y + to.height - 20 });
+      if ((await rows.count()) === expected) break;
+    }
+    await expect(rows).toHaveCount(expected);
+  }
+  expect(await orderOf()).toEqual(['引导语', '追问区']);
+
+  // 拖到首位插入位：题目组应插入到最前
+  const slot = page.getByTestId('canvas-slot-0');
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const item = page.locator('.palette-item').filter({ hasText: '题目组' }).first();
+    const from = await item.boundingBox();
+    const to = await slot.boundingBox();
+    if (!from || !to) throw new Error('拖拽目标不可见');
+    await pressAndMove(from, { x: to.x + to.width / 2, y: to.y + to.height / 2 });
+    if ((await rows.count()) === 3) break;
+  }
+  await expect(rows).toHaveCount(3);
+  expect(await orderOf()).toEqual(['题目组', '引导语', '追问区']);
+});
+
+test('点击容器可选中，且与题目选中互斥', async ({ page }) => {
+  await page.goto('questionnaires/create');
+  const canvas = page.getByRole('region', { name: '问卷画布' });
+  const surface = page.getByTestId('canvas-surface');
+
+  const drop = async (label: string) => {
+    const rows = canvas.locator('.designer-canvas__row');
+    const expected = (await rows.count()) + 1;
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      const item = page.locator('.palette-item').filter({ hasText: label }).first();
+      const from = await item.boundingBox();
+      const to = await surface.boundingBox();
+      if (!from || !to) throw new Error('拖拽目标不可见');
+      await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
+      await page.mouse.down();
+      await page.mouse.move(from.x + from.width / 2 + 20, from.y + from.height / 2, { steps: 5 });
+      await page.mouse.move(to.x + to.width / 2, to.y + to.height - 16, { steps: 12 });
+      await page.waitForTimeout(120);
+      await page.mouse.up();
+      if ((await rows.count()) === expected) break;
+    }
+    await expect(rows).toHaveCount(expected);
+  };
+  await drop('题目组');
+  await drop('追问区');
+
+  const blockAt = (index: number) => canvas.locator('.designer-canvas__block').nth(index);
+  const clickContainer = async (name: string) => {
+    const box = await canvas.getByRole('region', { name }).boundingBox();
+    if (!box) throw new Error('容器不可见');
+    await page.mouse.click(box.x + box.width / 2, box.y + 10);
+    await page.waitForTimeout(150);
+  };
+
+  await clickContainer('题目组');
+  await expect(blockAt(0)).toHaveClass(/is-selected/u);
+  await expect(blockAt(1)).not.toHaveClass(/is-selected/u);
+
+  await clickContainer('追问区');
+  await expect(blockAt(1)).toHaveClass(/is-selected/u);
+  await expect(blockAt(0)).not.toHaveClass(/is-selected/u);
+
+  // 键盘可访问性：聚焦容器后 Enter 选中
+  await blockAt(0).focus();
+  await page.keyboard.press('Enter');
+  await expect(blockAt(0)).toHaveClass(/is-selected/u);
+});
+
+test('选中容器后可编辑名称，引导语支持富文本与显示时间', async ({ page }) => {
+  await page.goto('questionnaires/create');
+  const canvas = page.getByRole('region', { name: '问卷画布' });
+  const surface = page.getByTestId('canvas-surface');
+  const inspector = page.getByRole('complementary', { name: '题目配置' });
+
+  const drop = async (label: string) => {
+    const rows = canvas.locator('.designer-canvas__row');
+    const expected = (await rows.count()) + 1;
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      const item = page.locator('.palette-item').filter({ hasText: label }).first();
+      const from = await item.boundingBox();
+      const to = await surface.boundingBox();
+      if (!from || !to) throw new Error('拖拽目标不可见');
+      await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
+      await page.mouse.down();
+      await page.mouse.move(from.x + from.width / 2 + 20, from.y + from.height / 2, { steps: 5 });
+      await page.mouse.move(to.x + to.width / 2, to.y + to.height - 16, { steps: 12 });
+      await page.waitForTimeout(120);
+      await page.mouse.up();
+      if ((await rows.count()) === expected) break;
+    }
+    await expect(rows).toHaveCount(expected);
+  };
+  const clickContainer = async (name: string) => {
+    const box = await canvas.getByRole('region', { name }).boundingBox();
+    if (!box) throw new Error('容器不可见');
+    await page.mouse.click(box.x + box.width / 2, box.y + 10);
+    await page.waitForTimeout(150);
+  };
+
+  await drop('题目组');
+  await drop('引导语');
+
+  // 题目组名称编辑同步到画布
+  await clickContainer('题目组');
+  const nameInput = inspector.getByLabel('题目组名称');
+  await nameInput.fill('第一组');
+  await expect(canvas.getByRole('heading', { name: '第一组' })).toBeVisible();
+
+  // 引导语：富文本编辑器与默认 30 秒显示时间
+  await clickContainer('引导语');
+  await expect(inspector.getByLabel('引导语内容')).toBeVisible();
+  await expect(inspector.getByLabel('显示时间（秒）')).toHaveValue('30');
+  await expect(canvas.getByText('展示 30 秒')).toBeVisible();
+
+  await inspector.getByLabel('引导语内容').click();
+  await page.keyboard.press('End');
+  await page.keyboard.type('请认真作答。');
+  await expect(canvas.getByText('请认真作答。')).toBeVisible();
+
+  // 显示时间可修改，画布同步展示
+  await inspector.getByLabel('显示时间（秒）').fill('45');
+  await expect(inspector.getByLabel('显示时间（秒）')).toHaveValue('45');
+  await expect(canvas.getByText('展示 45 秒')).toBeVisible();
+});
+
+test('题目只能拖入容器，题型 UI 支持添加与删除选项', async ({ page }) => {
+  await page.goto('questionnaires/create');
+  const canvas = page.getByRole('region', { name: '问卷画布' });
+  const surface = page.getByTestId('canvas-surface');
+  const palette = page.getByRole('complementary', { name: '组件库' });
+  const rows = canvas.locator('.designer-canvas__row');
+
+  const dragTo = async (label: string, target: { x: number; y: number }) => {
+    const item = palette.locator('.palette-item').filter({ hasText: label }).first();
+    const from = await item.boundingBox();
+    if (!from) throw new Error('拖拽源不可见');
+    await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(from.x + from.width / 2 + 20, from.y + from.height / 2, { steps: 5 });
+    await page.mouse.move(target.x, target.y, { steps: 12 });
+    await page.waitForTimeout(150);
+    await page.mouse.up();
+    await page.waitForTimeout(300);
+  };
+
+  // 先拖入题目组容器
+  const surfaceBox = await surface.boundingBox();
+  if (!surfaceBox) throw new Error('画布不可见');
+  await dragTo('题目组', {
+    x: surfaceBox.x + surfaceBox.width / 2,
+    y: surfaceBox.y + surfaceBox.height - 16,
+  });
+  await expect(rows).toHaveCount(1);
+
+  // 题目拖到画布空白处：不新增区块，给出提示
+  await palette.getByText('选择题', { exact: true }).click();
+  const blankBox = await surface.boundingBox();
+  if (!blankBox) throw new Error('画布不可见');
+  await dragTo('单选题', {
+    x: blankBox.x + blankBox.width / 2,
+    y: blankBox.y + blankBox.height - 8,
+  });
+  await expect(rows).toHaveCount(1);
+  await expect(canvas.locator('.question-card')).toHaveCount(0);
+
+  // 题目拖入容器正文：加入该容器
+  const dropZone = canvas.locator('[data-testid^="question-drop-"]').first();
+  const zoneBox = await dropZone.boundingBox();
+  if (!zoneBox) throw new Error('容器投放区不可见');
+  await dragTo('单选题', { x: zoneBox.x + zoneBox.width / 2, y: zoneBox.y + zoneBox.height - 12 });
+  await expect(canvas.locator('.question-card')).toHaveCount(1);
+
+  const options = canvas.locator('.question-type__option');
+  await expect(options).toHaveCount(3);
+  const addButton = canvas.getByRole('button', { name: '添加选项', exact: true });
+  await expect(addButton).toBeVisible();
+
+  // 添加选项
+  await addButton.click();
+  await expect(options).toHaveCount(4);
+  await expect(canvas.getByText('选项 4')).toBeVisible();
+
+  // 删除选项
+  await canvas.getByRole('button', { name: '删除选项 1', exact: true }).click();
+  await expect(options).toHaveCount(3);
+  await expect(canvas.getByText('选项 1')).toHaveCount(0);
 });
 
 test('窄屏优先显示画布且页面不会横向溢出', async ({ page }) => {

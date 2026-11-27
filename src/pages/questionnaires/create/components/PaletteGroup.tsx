@@ -23,9 +23,13 @@ import {
   TableOutlined,
   UnorderedListOutlined,
 } from '@ant-design/icons';
+import { useDraggable } from '@dnd-kit/react';
+import clsx from 'clsx';
 
 import type { QuestionTypeCategory, QuestionTypeId } from '../../question-types';
-import type { PaletteGroup as PaletteSection } from '../data';
+import type { PaletteGroup as PaletteSection, PaletteItem } from '../data';
+import type { PaletteDragData } from '../drag-drop';
+import { PALETTE_ITEM_DRAG_TYPE } from '../drag-drop';
 
 const typeIcons: Record<QuestionTypeId, ReactNode> = {
   'choice.single': <CheckCircleOutlined />,
@@ -70,19 +74,36 @@ interface PaletteGroupProps {
   onToggle?: ((event: SyntheticEvent<HTMLDetailsElement>) => void) | undefined;
 }
 
+/** 组件库条目：容器插入画布间隙，普通题型拖入题目组或追问区。 */
+const PaletteItemRow = ({ item, isContainer }: { item: PaletteItem; isContainer: boolean }) => {
+  const { ref, isDragging } = useDraggable<PaletteDragData>({
+    id: `palette-${item.type}`,
+    type: PALETTE_ITEM_DRAG_TYPE,
+    data: { type: item.type, label: item.label },
+  });
+
+  return (
+    <li
+      ref={ref}
+      className={clsx('palette-item', isDragging && 'is-dragging')}
+      title={isContainer ? '拖拽到画布添加容器' : '拖拽到题目组或追问区添加题目'}
+    >
+      <span className="palette-item__icon" aria-hidden="true">
+        {typeIcons[item.type]}
+      </span>
+      <span className="palette-item__text">
+        <span className="palette-item__label">{item.label}</span>
+        {item.hint ? <span className="palette-item__hint">{item.hint}</span> : null}
+      </span>
+    </li>
+  );
+};
+
 export const PaletteGroup = ({ group, open, onToggle }: PaletteGroupProps) => {
   const items = (
     <ul className="palette-group__items">
       {group.items.map((item) => (
-        <li className="palette-item" key={item.type}>
-          <span className="palette-item__icon" aria-hidden="true">
-            {typeIcons[item.type]}
-          </span>
-          <span className="palette-item__text">
-            <span className="palette-item__label">{item.label}</span>
-            {item.hint ? <span className="palette-item__hint">{item.hint}</span> : null}
-          </span>
-        </li>
+        <PaletteItemRow key={item.type} item={item} isContainer={group.key === 'container'} />
       ))}
     </ul>
   );

@@ -1,4 +1,4 @@
-import { useId, useImperativeHandle, useMemo } from 'react';
+import { useEffect, useId, useImperativeHandle, useMemo } from 'react';
 
 import type { JSONContent } from '@tiptap/core';
 import { EditorContent, useEditor } from '@tiptap/react';
@@ -75,6 +75,13 @@ const EditorSurface = (props: EditorSurfaceProps) => {
     },
     [placeholder, limit, mode],
   );
+  // 初始内容写入不产生 update 事件，字数等订阅会停留旧值；
+  // 实例就绪后派发一个不修改文档的 meta 事务，触发订阅重新取初值。
+  useEffect(() => {
+    if (!editor) return;
+    editor.view.dispatch(editor.state.tr.setMeta('refreshEditorState', true));
+  }, [editor]);
+
   const assets = useAssetUpload(editor, services);
   const { cancel, upload } = assets;
 

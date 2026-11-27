@@ -57,6 +57,7 @@ export default defineConfig(({ command, mode, isPreview }) => {
     },
     server: {
       host: '0.0.0.0',
+      open: true,
       port: 8888,
       strictPort: true,
       watch: {
